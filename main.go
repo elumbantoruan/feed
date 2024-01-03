@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github/elumbantoruan/feed/pkg/crawler"
 	"github/elumbantoruan/feed/pkg/feed"
 )
 
@@ -17,7 +18,7 @@ func main() {
 	}
 
 	for _, ut := range urlTypes {
-		cr := feed.CrawlerFactory(ut)
+		cr := crawler.CrawlerFactory(ut)
 		f, err := cr.Download(ut.URL)
 		if err != nil {
 			fmt.Println("error: ", err)
