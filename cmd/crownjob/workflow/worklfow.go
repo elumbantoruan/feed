@@ -24,7 +24,7 @@ func New(config config.Config, logger *slog.Logger) Workflow {
 func (w Workflow) Run() error {
 	st, err := storage.NewMySQLStorage(w.Config.DBConn)
 	if err != nil {
-		w.Logger.Error("error from connection string", err)
+		w.Logger.Error("bad connection string", "error", err)
 		return err
 	}
 
