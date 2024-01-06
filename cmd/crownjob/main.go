@@ -3,6 +3,7 @@ package main
 import (
 	"github/elumbantoruan/feed/cmd/crownjob/workflow"
 	"github/elumbantoruan/feed/pkg/config"
+	"log"
 	"log/slog"
 	"os"
 	"time"
@@ -16,5 +17,8 @@ func main() {
 	config := config.NewConfig()
 
 	workflow := workflow.New(config, logger)
-	workflow.Run()
+	err := workflow.Run()
+	if err != nil {
+		log.Fatal(err)
+	}
 }
