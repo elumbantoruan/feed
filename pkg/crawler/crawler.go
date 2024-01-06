@@ -2,7 +2,6 @@ package crawler
 
 import (
 	"encoding/xml"
-	"errors"
 	"fmt"
 	"github/elumbantoruan/feed/pkg/feed"
 	"io"
@@ -10,11 +9,11 @@ import (
 	"time"
 )
 
-func CrawlerFactory(urlType feed.URLType) Crawler {
-	if urlType.Type == "atom" {
-		return NewAtomCrawler(urlType.URL)
+func CrawlerFactory(site feed.Feed) Crawler {
+	if site.Type == "atom" {
+		return NewAtomCrawler(site.RSS)
 	}
-	return NewRssCrawler(urlType.URL)
+	return NewRssCrawler(site.RSS)
 }
 
 type Crawler interface {
@@ -82,8 +81,8 @@ func parseDateTime(dateTime string) (time.Time, error) {
 	for _, layout := range layouts {
 		t, err = time.Parse(layout, dateTime)
 		if err == nil {
-			return t, nil
+			return t.UTC(), nil
 		}
 	}
-	return time.Time{}, errors.New("parseDateTime: " + err.Error())
+	return time.Time{}, fmt.Errorf("parseDateTime: %w", err)
 }

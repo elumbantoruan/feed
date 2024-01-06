@@ -1,6 +1,9 @@
 package crawler
 
-import "github/elumbantoruan/feed/pkg/feed"
+import (
+	"github/elumbantoruan/feed/pkg/feed"
+	"strings"
+)
 
 type RssCrawler struct {
 	URL string
@@ -34,7 +37,7 @@ func (rc *RssCrawler) ConvertToFeed(r *feed.Rss) (*feed.Feed, error) {
 	f := &feed.Feed{
 		Site:    r.Channel.Title,
 		Link:    r.Channel.Link.Href,
-		Updated: pubDate,
+		Updated: &pubDate,
 		RSS:     r.URL,
 	}
 	for _, item := range r.Channel.Item {
@@ -44,13 +47,17 @@ func (rc *RssCrawler) ConvertToFeed(r *feed.Rss) (*feed.Feed, error) {
 			return nil, err
 		}
 		article := feed.Article{
-			ID:        item.Guid.Text,
-			Published: published,
-			Updated:   published,
-			Title:     item.Title,
-			Authors:   []string{item.Creator},
-			Link:      item.Link,
-			Content:   item.Description,
+			ID:          item.Guid.Text,
+			Published:   published,
+			Updated:     published,
+			Title:       item.Title,
+			Authors:     []string{item.Creator},
+			Link:        item.Link,
+			Description: item.Description,
+			Content:     strings.TrimSpace(item.Content),
+		}
+		if article.Content == "" {
+			article.Content = item.Description
 		}
 		f.Articles = append(f.Articles, article)
 	}
