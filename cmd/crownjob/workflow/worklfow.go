@@ -62,9 +62,9 @@ func (w Workflow) Run() error {
 				w.Logger.Error("AddArticle", err)
 			}
 			if n == 0 {
-				w.Logger.Info("AddArticle - article not being added", slog.String("Existing Article", article.Link))
+				w.Logger.Info("AddArticle - article not added", slog.String("Existing Article", article.Link))
 			} else {
-				w.Logger.Info("AddArticle - new article was added", slog.String("New Article", article.Link))
+				w.Logger.Info("AddArticle - new article added", slog.Int64("ArticleID", n), slog.String("New Article", article.Link))
 			}
 		}
 	}

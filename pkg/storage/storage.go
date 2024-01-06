@@ -183,8 +183,6 @@ func (ms *MySQLStorage) AddArticle(ctx context.Context, article feed.Article, si
 		return -1, err
 	}
 
-	fmt.Println(r.LastInsertId())
-
 	return r.LastInsertId()
 }
 func (ms *MySQLStorage) AddArticles(ctx context.Context, articles []feed.Article) error {
