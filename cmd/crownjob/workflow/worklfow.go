@@ -28,7 +28,7 @@ func (w Workflow) Run() error {
 		return err
 	}
 
-	sites, err := st.GetFeeds(context.Background())
+	sites, err := st.GetSiteFeeds(context.Background())
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -50,7 +50,7 @@ func (w Workflow) Run() error {
 		} else {
 			w.Logger.Info("Update", slog.String("site", site.Site), slog.Time("current ts", *f.Updated), slog.Time("last ts", *site.Updated))
 
-			err = st.UpdateFeed(context.Background(), *f)
+			err = st.UpdateSiteFeed(context.Background(), *f)
 			if err != nil {
 				w.Logger.Error("UpdateFeed", err)
 			}

@@ -14,10 +14,10 @@ import (
 )
 
 type Storage interface {
-	AddFeed(ctx context.Context, feed feed.Feed) (int64, error)
-	GetFeeds(ctx context.Context) ([]feed.Feed, error)
-	GetFeed(ctx context.Context, id int) (*feed.Feed, error)
-	UpdateFeed(ctx context.Context, feed feed.Feed) error
+	AddSiteFeed(ctx context.Context, feed feed.Feed) (int64, error)
+	GetSiteFeeds(ctx context.Context) ([]feed.Feed, error)
+	GetSiteFeed(ctx context.Context, id int) (*feed.Feed, error)
+	UpdateSiteFeed(ctx context.Context, feed feed.Feed) error
 	AddArticle(ctx context.Context, article feed.Article, siteID int) error
 	AddArticles(ctx context.Context, articles []feed.Article) error
 	GetArticle(ctx context.Context, id int) (*feed.Article, error)
@@ -40,7 +40,7 @@ func NewMySQLStorage(conn string) (*MySQLStorage, error) {
 	}, nil
 }
 
-func (ms *MySQLStorage) AddFeed(ctx context.Context, feed feed.Feed) (int64, error) {
+func (ms *MySQLStorage) AddSiteFeed(ctx context.Context, feed feed.Feed) (int64, error) {
 	query := fmt.Sprintf(`
 		INSERT INTO feed.feed_site (
 			name, url, type, updated
@@ -68,7 +68,7 @@ func (ms *MySQLStorage) AddFeed(ctx context.Context, feed feed.Feed) (int64, err
 
 	return r.LastInsertId()
 }
-func (ms *MySQLStorage) GetFeeds(ctx context.Context) ([]feed.Feed, error) {
+func (ms *MySQLStorage) GetSiteFeeds(ctx context.Context) ([]feed.Feed, error) {
 	db, err := sql.Open("mysql", ms.conn)
 	if err != nil {
 		return nil, err
@@ -101,11 +101,11 @@ func (ms *MySQLStorage) GetFeeds(ctx context.Context) ([]feed.Feed, error) {
 
 	return feedSites, nil
 }
-func (ms *MySQLStorage) GetFeed(ctx context.Context, id int) (*feed.Feed, error) {
+func (ms *MySQLStorage) GetSiteFeed(ctx context.Context, id int) (*feed.Feed, error) {
 	return nil, nil
 }
 
-func (ms *MySQLStorage) UpdateFeed(ctx context.Context, feed feed.Feed) error {
+func (ms *MySQLStorage) UpdateSiteFeed(ctx context.Context, feed feed.Feed) error {
 	query := fmt.Sprintf("UPDATE feed.feed_site SET feed.feed_site.updated = ? WHERE feed.feed_site.id = ?")
 
 	db, err := sql.Open("mysql", ms.conn)
