@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github/elumbantoruan/feed/cmd/crownjob/workflow"
+	"github/elumbantoruan/feed/cmd/cronjob/workflow"
 	"github/elumbantoruan/feed/pkg/config"
 	"log"
 	"log/slog"

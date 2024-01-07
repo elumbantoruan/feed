@@ -11,10 +11,10 @@ RUN go mod download
 
 COPY . .
 
-RUN go build -o /app/crown ./cmd/crownjob
+RUN go build -o /app/cron ./cmd/cronjob
 
 FROM alpine
 RUN apk add --no-cache ca-certificates && update-ca-certificates
-COPY --from=build-env /app/crown /
+COPY --from=build-env /app/cron /
 
-CMD ["/crown"]
+CMD ["/cron"]
