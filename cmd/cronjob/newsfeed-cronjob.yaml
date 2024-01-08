@@ -1,18 +1,44 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: cronsecret
+  namespace: newsfeed
+type: Opaque
+data:
+  DB_CONN: ${DB_CONN}
+  DISCORD_WEBHOOK: ${DISCORD_WEBHOOK}
+---
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: myjob
+  name: newsfeed-cronjob
+  namespace: newsfeed
 spec:
-  schedule: "* * * * *"
+  schedule: "*/5 * * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
   jobTemplate:
     spec:
       template:
         spec:
           containers:
-          - name: hello
-            image: busybox:1.28
-            command:
-            - /bin/sh
-            - -c
-            - date; echo Hello from the Kubernetes cluster
+          - name: newsfeed-cronjob
+            image: edisonlt/cron-feed:latest
+            resources:
+                limits:
+                  memory: "200Mi"
+                requests:
+                  memory: "100Mi"
+            env:
+            - name: DB_CONN
+              valueFrom:
+                secretKeyRef:
+                  name: cronsecret
+                  key: DB_CONN
+            - name: DISCORD_WEBHOOK
+              valueFrom:
+                secretKeyRef:
+                  name: cronsecret
+                  key: DISCORD_WEBHOOK
           restartPolicy: OnFailure
