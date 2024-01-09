@@ -22,6 +22,7 @@ go.work
 
 note.txt
 runcron.sh
+rungrpc.sh
 .vscode
 env.list
 localdeploy

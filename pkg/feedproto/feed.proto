@@ -1,0 +1,62 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
+
+option go_package = "./pkg/feedproto";
+
+package feedproto;
+
+service FeedService {
+    rpc AddSiteFeed(Feed) returns (google.protobuf.Empty);
+    rpc GetSitesFeed(google.protobuf.Empty) returns (Feeds);
+    rpc UpdateSiteFeed(Feed) returns (google.protobuf.Empty);
+    rpc AddArticle(ArticleSite) returns (ArticleIdentifier);
+    rpc GetArticles(google.protobuf.Empty) returns (ArticlesSite);
+}
+
+message Feeds {
+    repeated Feed feeds = 1;
+}
+
+message Feed {
+    int64 id = 1;
+    string site = 2;
+    string icon = 3;
+    string link = 4;
+    string rss = 5;
+    string type = 6;
+    google.protobuf.Timestamp updated = 7;
+    Articles articles = 8;
+}
+
+message Articles {
+    repeated Article articles = 1;
+}
+
+message ArticleSite {
+    int64 siteid = 1;
+    Article article = 2;
+}
+
+message ArticlesSite {
+    repeated ArticleSite articlesSite = 1;
+}
+
+message ArticleIdentifier {
+    int64 identifier = 1;
+    Article article = 2;
+}
+
+message Article {
+    string id = 1;
+    google.protobuf.Timestamp published = 2;
+    google.protobuf.Timestamp updated = 3;
+    string title = 4;
+    repeated string authors = 5;
+    string link = 6;
+    string description = 7;
+    string content = 8;
+    string blob = 9; 
+}

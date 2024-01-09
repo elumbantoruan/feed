@@ -27,6 +27,11 @@ type Article struct {
 	Blob        *string   `json:"blob"`
 }
 
+type ArticleSite[T any] struct {
+	SiteID  T       `json:"siteID"`
+	Article Article `json:"article"`
+}
+
 type URLType struct {
 	URL  string
 	Type string

@@ -8,28 +8,29 @@ import (
 	"errors"
 	"fmt"
 	"github/elumbantoruan/feed/pkg/feed"
+	"strings"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
 )
 
-type Storage interface {
-	AddSiteFeed(ctx context.Context, feed feed.Feed) (int64, error)
-	GetSiteFeeds(ctx context.Context) ([]feed.Feed, error)
-	GetSiteFeed(ctx context.Context, id int) (*feed.Feed, error)
+type Storage[T any] interface {
+	AddSiteFeed(ctx context.Context, feed feed.Feed) (T, error)
+	GetSitesFeed(ctx context.Context) ([]feed.Feed, error)
+	GetSiteFeed(ctx context.Context, siteID T) (*feed.Feed, error)
 	UpdateSiteFeed(ctx context.Context, feed feed.Feed) error
-	AddArticle(ctx context.Context, article feed.Article, siteID int) error
+	AddArticle(ctx context.Context, article feed.Article, siteID T) (T, error)
 	AddArticles(ctx context.Context, articles []feed.Article) error
-	GetArticle(ctx context.Context, id int) (*feed.Article, error)
+	GetArticle(ctx context.Context, id T) (*feed.Article, error)
 	GetArticleHash(ctx context.Context, hash string) (*feed.Article, error)
-	GetArticles(ctx context.Context) ([]feed.Article, error)
+	GetArticles(ctx context.Context) ([]feed.ArticleSite[T], error)
 }
 
 type MySQLStorage struct {
 	conn string
 }
 
-func NewMySQLStorage(conn string) (*MySQLStorage, error) {
+func NewMySQLStorage(conn string) (Storage[int64], error) {
 	db, err := sql.Open("mysql", conn)
 	if err != nil {
 		return nil, err
@@ -68,7 +69,8 @@ func (ms *MySQLStorage) AddSiteFeed(ctx context.Context, feed feed.Feed) (int64,
 
 	return r.LastInsertId()
 }
-func (ms *MySQLStorage) GetSiteFeeds(ctx context.Context) ([]feed.Feed, error) {
+
+func (ms *MySQLStorage) GetSitesFeed(ctx context.Context) ([]feed.Feed, error) {
 	db, err := sql.Open("mysql", ms.conn)
 	if err != nil {
 		return nil, err
@@ -86,12 +88,11 @@ func (ms *MySQLStorage) GetSiteFeeds(ctx context.Context) ([]feed.Feed, error) {
 	if err != nil {
 		return nil, err
 	}
-	var (
-		feedSite  feed.Feed
-		feedSites []feed.Feed
-	)
+	var feedSites []feed.Feed
 
 	for rows.Next() {
+		var feedSite feed.Feed
+
 		err := rows.Scan(&feedSite.ID, &feedSite.Site, &feedSite.RSS, &feedSite.Type, &feedSite.Updated)
 		if err != nil {
 			return nil, err
@@ -101,7 +102,7 @@ func (ms *MySQLStorage) GetSiteFeeds(ctx context.Context) ([]feed.Feed, error) {
 
 	return feedSites, nil
 }
-func (ms *MySQLStorage) GetSiteFeed(ctx context.Context, id int) (*feed.Feed, error) {
+func (ms *MySQLStorage) GetSiteFeed(ctx context.Context, id int64) (*feed.Feed, error) {
 	return nil, nil
 }
 
@@ -136,12 +137,11 @@ func (ms *MySQLStorage) UpdateSiteFeed(ctx context.Context, feed feed.Feed) erro
 }
 
 func (ms *MySQLStorage) AddArticle(ctx context.Context, article feed.Article, siteID int64) (int64, error) {
-
 	var authors string
 	for i, author := range article.Authors {
 		authors += author
 		if i < len(article.Authors)-1 {
-			authors += " "
+			authors += ", "
 		}
 	}
 	data, _ := json.Marshal(article)
@@ -185,12 +185,15 @@ func (ms *MySQLStorage) AddArticle(ctx context.Context, article feed.Article, si
 
 	return r.LastInsertId()
 }
+
 func (ms *MySQLStorage) AddArticles(ctx context.Context, articles []feed.Article) error {
 	return nil
 }
-func (ms *MySQLStorage) GetArticle(ctx context.Context, id int) (*feed.Article, error) {
+
+func (ms *MySQLStorage) GetArticle(ctx context.Context, id int64) (*feed.Article, error) {
 	return nil, nil
 }
+
 func (ms *MySQLStorage) GetArticleHash(ctx context.Context, hash string) (*feed.Article, error) {
 	query := "SELECT id, title FROM feed.feed_content WHERE hash = ?"
 	db, err := sql.Open("mysql", ms.conn)
@@ -219,6 +222,43 @@ func (ms *MySQLStorage) GetArticleHash(ctx context.Context, hash string) (*feed.
 
 	return &article, nil
 }
-func (ms *MySQLStorage) GetArticles(ctx context.Context) ([]feed.Article, error) {
-	return nil, nil
+
+func (ms *MySQLStorage) GetArticles(ctx context.Context) ([]feed.ArticleSite[int64], error) {
+	query := "SELECT feed_site_id, content_id, title, link, pub_date, description, content, authors FROM feed.feed_content ORDER BY id desc LIMIT 100"
+	db, err := sql.Open("mysql", ms.conn)
+	if err != nil {
+		return nil, err
+	}
+	defer db.Close()
+
+	selectQ, err := db.Prepare(query)
+	if err != nil {
+		return nil, err
+	}
+	defer selectQ.Close()
+
+	rows, err := selectQ.QueryContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var articles []feed.ArticleSite[int64]
+
+	for rows.Next() {
+		var (
+			authors string
+			article feed.ArticleSite[int64]
+		)
+
+		err := rows.Scan(&article.SiteID, &article.Article.ID, &article.Article.Title, &article.Article.Link, &article.Article.Published, &article.Article.Description, &article.Article.Content, &authors)
+		if err != nil {
+			return nil, err
+		}
+		items := strings.Split(authors, ", ")
+		for _, item := range items {
+			article.Article.Authors = append(article.Article.Authors, item)
+		}
+		articles = append(articles, article)
+	}
+	return articles, nil
 }

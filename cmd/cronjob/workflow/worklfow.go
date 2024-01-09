@@ -2,7 +2,7 @@ package workflow
 
 import (
 	"context"
-	"github/elumbantoruan/feed/pkg/config"
+	"github/elumbantoruan/feed/cmd/cronjob/config"
 	"github/elumbantoruan/feed/pkg/crawler"
 	"github/elumbantoruan/feed/pkg/storage"
 	"log"
@@ -10,25 +10,22 @@ import (
 )
 
 type Workflow struct {
-	Config config.Config
-	Logger *slog.Logger
+	Storage storage.Storage[int64]
+	Config  *config.Config
+	Logger  *slog.Logger
 }
 
-func New(config config.Config, logger *slog.Logger) Workflow {
+func New(st storage.Storage[int64], config *config.Config, logger *slog.Logger) Workflow {
 	return Workflow{
-		Config: config,
-		Logger: logger,
+		Storage: st,
+		Config:  config,
+		Logger:  logger,
 	}
 }
 
 func (w Workflow) Run() error {
-	st, err := storage.NewMySQLStorage(w.Config.DBConn)
-	if err != nil {
-		w.Logger.Error("bad connection string", "error", err)
-		return err
-	}
 
-	sites, err := st.GetSiteFeeds(context.Background())
+	sites, err := w.Storage.GetSitesFeed(context.Background())
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -50,21 +47,21 @@ func (w Workflow) Run() error {
 		} else {
 			w.Logger.Info("Update", slog.String("site", site.Site), slog.Time("current ts", *f.Updated), slog.Time("last ts", *site.Updated))
 
-			err = st.UpdateSiteFeed(context.Background(), *f)
+			err = w.Storage.UpdateSiteFeed(context.Background(), *f)
 			if err != nil {
 				w.Logger.Error("UpdateFeed", err)
 			}
 		}
 
 		for _, article := range f.Articles {
-			n, err := st.AddArticle(context.Background(), article, site.ID)
+			id, err := w.Storage.AddArticle(context.Background(), article, site.ID)
 			if err != nil {
 				w.Logger.Error("AddArticle", err)
 			}
-			if n == 0 {
+			if id == 0 {
 				w.Logger.Info("AddArticle - article not added", slog.String("Existing Article", article.Link))
 			} else {
-				w.Logger.Info("AddArticle - new article added", slog.Int64("ArticleID", n), slog.String("New Article", article.Link))
+				w.Logger.Info("AddArticle - new article added", slog.Int64("ArticleID", id), slog.String("New Article", article.Link))
 			}
 		}
 	}
