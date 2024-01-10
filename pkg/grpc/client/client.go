@@ -2,9 +2,10 @@ package client
 
 import (
 	"context"
+	"fmt"
 	"github/elumbantoruan/feed/pkg/feed"
 	pb "github/elumbantoruan/feed/pkg/feedproto"
-	"log"
+	"time"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -12,24 +13,23 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-type grpcClient struct {
-	serverAddr    string
+type GrpcClient struct {
 	serviceClient pb.FeedServiceClient
 }
 
-func NewGRPCClient(serverAddr string) grpcClient {
+func NewGRPCClient(serverAddr string) (*GrpcClient, error) {
 
 	conn, err := grpc.Dial(serverAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
-		log.Fatal(err)
+		return nil, fmt.Errorf("error grpc connect: %w", err)
 	}
 
 	client := pb.NewFeedServiceClient(conn)
 
-	return grpcClient{serviceClient: client}
+	return &GrpcClient{serviceClient: client}, nil
 }
 
-func (g grpcClient) AddSiteFeed(ctx context.Context, site feed.Feed) error {
+func (g GrpcClient) AddSiteFeed(ctx context.Context, site feed.Feed) error {
 	pbFeed := pb.Feed{
 		Site: site.Site,
 		Rss:  site.RSS,
@@ -39,7 +39,7 @@ func (g grpcClient) AddSiteFeed(ctx context.Context, site feed.Feed) error {
 	return err
 }
 
-func (g grpcClient) GetSitesFeed(ctx context.Context) ([]feed.Feed, error) {
+func (g GrpcClient) GetSitesFeed(ctx context.Context) ([]feed.Feed, error) {
 	var feeds []feed.Feed
 	pbfeeds, err := g.serviceClient.GetSitesFeed(ctx, &emptypb.Empty{})
 	if err != nil {
@@ -60,7 +60,10 @@ func (g grpcClient) GetSitesFeed(ctx context.Context) ([]feed.Feed, error) {
 	return feeds, nil
 }
 
-func (g grpcClient) UpdateSiteFeed(ctx context.Context, feed feed.Feed) error {
+func (g GrpcClient) UpdateSiteFeed(ctx context.Context, feed feed.Feed) error {
+	if feed.Updated == nil {
+		feed.Updated = &time.Time{}
+	}
 	pbFeed := pb.Feed{
 		Id:      feed.ID,
 		Site:    feed.Site,
@@ -74,7 +77,7 @@ func (g grpcClient) UpdateSiteFeed(ctx context.Context, feed feed.Feed) error {
 	return err
 }
 
-func (g grpcClient) AddArticle(ctx context.Context, article feed.Article, siteID int64) (int64, error) {
+func (g GrpcClient) AddArticle(ctx context.Context, article feed.Article, siteID int64) (int64, error) {
 	var authors []string
 	for _, author := range article.Authors {
 		authors = append(authors, author)
@@ -98,7 +101,7 @@ func (g grpcClient) AddArticle(ctx context.Context, article feed.Article, siteID
 	return aid.Identifier, nil
 }
 
-func (g grpcClient) GetArticles(ctx context.Context) ([]feed.ArticleSite[int64], error) {
+func (g GrpcClient) GetArticles(ctx context.Context) ([]feed.ArticleSite[int64], error) {
 	var articles []feed.ArticleSite[int64]
 	pbArticles, err := g.serviceClient.GetArticles(ctx, &emptypb.Empty{})
 	if err != nil {

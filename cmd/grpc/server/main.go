@@ -6,14 +6,19 @@ import (
 	"github/elumbantoruan/feed/cmd/grpc/server/service"
 	pb "github/elumbantoruan/feed/pkg/feedproto"
 	"github/elumbantoruan/feed/pkg/storage"
-	"log"
 	"net"
+	"net/http"
 	"os"
 	"time"
 
 	"log/slog"
 
+	"github.com/heptiolabs/healthcheck"
 	"google.golang.org/grpc"
+)
+
+const (
+	healthCheckEndpoint = ":8086"
 )
 
 func main() {
@@ -23,10 +28,21 @@ func main() {
 	config, _ := config.NewConfig()
 	st, err := storage.NewMySQLStorage(config.DBConn)
 	if err != nil {
-		log.Fatal(err)
+		logger.Error("main", slog.Any("error", err))
+		os.Exit(1)
 	}
 
-	lis, err := net.Listen("tcp", fmt.Sprintf("localhost:%s", config.GRPCPort))
+	health := healthcheck.NewHandler()
+
+	go http.ListenAndServe(healthCheckEndpoint, health)
+
+	address := fmt.Sprintf(":%s", config.GRPCPort)
+	lis, err := net.Listen("tcp", address)
+	if err != nil {
+		logger.Error("main", slog.Any("error", err))
+		os.Exit(1)
+	}
+	logger.Info("main", slog.String("start listening at", address))
 
 	svc := service.NewFeedServiceServer(st, logger)
 	grpcServer := grpc.NewServer()

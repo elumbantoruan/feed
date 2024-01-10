@@ -5,6 +5,7 @@ import (
 	"github/elumbantoruan/feed/pkg/feed"
 	pb "github/elumbantoruan/feed/pkg/feedproto"
 	"github/elumbantoruan/feed/pkg/storage"
+	"time"
 
 	"log/slog"
 
@@ -34,7 +35,7 @@ func (f feedServiceServer) AddSiteFeed(ctx context.Context, pbfeed *pb.Feed) (*e
 	}
 	_, err := f.storage.AddSiteFeed(ctx, feed)
 	if err != nil {
-		f.logger.Error("AddSiteFeed - InsertSite", slog.Any("error", err))
+		f.logger.Error("AddSiteFeed", slog.Any("error", err))
 		return nil, err
 	}
 	return &empty.Empty{}, nil
@@ -44,11 +45,14 @@ func (f feedServiceServer) GetSitesFeed(ctx context.Context, e *empty.Empty) (*p
 
 	sites, err := f.storage.GetSitesFeed(ctx)
 	if err != nil {
-		f.logger.Error("GetSitesFeed - GetSites", slog.Any("error", err))
+		f.logger.Error("GetSitesFeed", slog.Any("error", err))
 		return nil, err
 	}
 	var pbFeeds []*pb.Feed
 	for _, site := range sites {
+		if site.Updated == nil {
+			site.Updated = &time.Time{}
+		}
 		pbFeed := &pb.Feed{
 			Id:      site.ID,
 			Site:    site.Site,

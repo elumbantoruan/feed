@@ -2,30 +2,30 @@ package workflow
 
 import (
 	"context"
-	"github/elumbantoruan/feed/cmd/cronjob/config"
 	"github/elumbantoruan/feed/pkg/crawler"
-	"github/elumbantoruan/feed/pkg/storage"
+	"github/elumbantoruan/feed/pkg/grpc/client"
+
 	"log"
 	"log/slog"
 )
 
 type Workflow struct {
-	Storage storage.Storage[int64]
-	Config  *config.Config
-	Logger  *slog.Logger
+	Client *client.GrpcClient
+	Logger *slog.Logger
 }
 
-func New(st storage.Storage[int64], config *config.Config, logger *slog.Logger) Workflow {
+func New(client *client.GrpcClient, logger *slog.Logger) Workflow {
 	return Workflow{
-		Storage: st,
-		Config:  config,
-		Logger:  logger,
+		Client: client,
+		Logger: logger,
 	}
 }
 
 func (w Workflow) Run() error {
 
-	sites, err := w.Storage.GetSitesFeed(context.Background())
+	ctx := context.Background()
+
+	sites, err := w.Client.GetSitesFeed(ctx)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -47,14 +47,14 @@ func (w Workflow) Run() error {
 		} else {
 			w.Logger.Info("Update", slog.String("site", site.Site), slog.Time("current ts", *f.Updated), slog.Time("last ts", *site.Updated))
 
-			err = w.Storage.UpdateSiteFeed(context.Background(), *f)
+			err = w.Client.UpdateSiteFeed(ctx, *f)
 			if err != nil {
 				w.Logger.Error("UpdateFeed", err)
 			}
 		}
 
 		for _, article := range f.Articles {
-			id, err := w.Storage.AddArticle(context.Background(), article, site.ID)
+			id, err := w.Client.AddArticle(ctx, article, site.ID)
 			if err != nil {
 				w.Logger.Error("AddArticle", err)
 			}
@@ -65,5 +65,6 @@ func (w Workflow) Run() error {
 			}
 		}
 	}
+
 	return nil
 }

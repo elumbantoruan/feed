@@ -43,7 +43,7 @@ func NewMySQLStorage(conn string) (Storage[int64], error) {
 
 func (ms *MySQLStorage) AddSiteFeed(ctx context.Context, feed feed.Feed) (int64, error) {
 	query := fmt.Sprintf(`
-		INSERT INTO feed.feed_site (
+		INSERT INTO feed_site (
 			name, url, type, updated
 		) VALUES (
 			?, ?, ?, ?
@@ -77,7 +77,7 @@ func (ms *MySQLStorage) GetSitesFeed(ctx context.Context) ([]feed.Feed, error) {
 	}
 	defer db.Close()
 
-	query := "SELECT id, name, url, type, updated FROM feed.feed_site"
+	query := "SELECT id, name, url, type, updated FROM feed_site"
 	selectQ, err := db.Prepare(query)
 	if err != nil {
 		return nil, err
@@ -107,7 +107,7 @@ func (ms *MySQLStorage) GetSiteFeed(ctx context.Context, id int64) (*feed.Feed, 
 }
 
 func (ms *MySQLStorage) UpdateSiteFeed(ctx context.Context, feed feed.Feed) error {
-	query := fmt.Sprintf("UPDATE feed.feed_site SET feed.feed_site.updated = ? WHERE feed.feed_site.id = ?")
+	query := fmt.Sprintf("UPDATE feed_site SET feed_site.updated = ? WHERE feed_site.id = ?")
 
 	db, err := sql.Open("mysql", ms.conn)
 	if err != nil {
@@ -159,7 +159,7 @@ func (ms *MySQLStorage) AddArticle(ctx context.Context, article feed.Article, si
 	}
 
 	query := fmt.Sprintf(`
-		INSERT INTO feed.feed_content (
+		INSERT INTO feed_content (
 			feed_site_id, content_id, title, link, pub_date, description, content, authors, hash
 		) VALUES (
 			?, ?, ?, ?,	?, ?, ?, ?, ?
@@ -195,7 +195,7 @@ func (ms *MySQLStorage) GetArticle(ctx context.Context, id int64) (*feed.Article
 }
 
 func (ms *MySQLStorage) GetArticleHash(ctx context.Context, hash string) (*feed.Article, error) {
-	query := "SELECT id, title FROM feed.feed_content WHERE hash = ?"
+	query := "SELECT id, title FROM feed_content WHERE hash = ?"
 	db, err := sql.Open("mysql", ms.conn)
 	if err != nil {
 		return nil, err
@@ -224,7 +224,7 @@ func (ms *MySQLStorage) GetArticleHash(ctx context.Context, hash string) (*feed.
 }
 
 func (ms *MySQLStorage) GetArticles(ctx context.Context) ([]feed.ArticleSite[int64], error) {
-	query := "SELECT feed_site_id, content_id, title, link, pub_date, description, content, authors FROM feed.feed_content ORDER BY id desc LIMIT 100"
+	query := "SELECT feed_site_id, content_id, title, link, pub_date, description, content, authors FROM feed_content ORDER BY id desc LIMIT 100"
 	db, err := sql.Open("mysql", ms.conn)
 	if err != nil {
 		return nil, err
