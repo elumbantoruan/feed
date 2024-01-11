@@ -57,3 +57,6 @@ newsfeed-grpc-5fd97bfb69-v9hgf    1/1     Running     0          6h49m
 
 At this point, MySQL database is not managed in Kubernetes, rather as a local installation.  
 Link to [database schema](https://github.com/elumbantoruan/feed/tree/main/pkg/storage/db-script).
+
+### Docker hub
+Link to [docker hub](https://hub.docker.com/repositories/edisonlt) for Cronjob and gRPC repositories.
