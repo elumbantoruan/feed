@@ -23,7 +23,7 @@ k8sworker2.edison.net   178m         2%     10143Mi         31%
 
 ### Cronjob
 
-The Cronjobis containerized and managed in Kubernetes.   
+The Cronjob is containerized and managed in Kubernetes.   
 Link to [source code](https://github.com/elumbantoruan/feed/tree/main/cmd/cronjob).
 
 ```
