@@ -19,6 +19,12 @@ NAME                    CPU(cores)   CPU%   MEMORY(bytes)   MEMORY%
 k8smaster.edison.net    339m         2%     20483Mi         64%
 k8sworker1.edison.net   153m         3%     3840Mi          54%
 k8sworker2.edison.net   178m         2%     10143Mi         31%
+
+kubectl get nodes
+NAME                    STATUS   ROLES           AGE    VERSION
+k8smaster.edison.net    Ready    control-plane   251d   v1.27.1
+k8sworker1.edison.net   Ready    <none>          251d   v1.27.1
+k8sworker2.edison.net   Ready    <none>          251d   v1.27.1
 ```
 
 ### Cronjob
