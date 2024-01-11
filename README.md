@@ -11,7 +11,7 @@ I use this news crawler to accumulate news content into my desire format.  It al
 
 ### Kubernetes homelab
 
-I use kubeadm to setup a master node and two worker nodes
+I use [kubeadm](https://kubernetes.io/docs/reference/setup-tools/kubeadm/) to setup a Kubernetest cluster with master node and two worker nodes.
 
 ```
 kubectl top nodes
