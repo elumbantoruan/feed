@@ -3,7 +3,7 @@ News crawler
 
 ## Need
 
-Feed is a news crawler.  The crawler downloads content from several RSS websites such as Tech Verge, Wired, Mashable, etc.  The crawler is triggered by CronJob, which makes gRPC call to store the content into MySQL database.  The CronJob and gRPC are containerized and its workload is managed in Kubernetes.  
+Feed is a news crawler.  The crawler downloads content from several RSS websites such as The Verge, Wired, Mashable, etc.  The crawler is triggered by CronJob, which makes gRPC call to store the content into MySQL database.  The CronJob and gRPC are containerized and its workload is managed in Kubernetes.  
 
 I use this news crawler to accumulate news content into my desire format.  It allows me to archieve the data.  The infrastructure components such as Kubernetes and MySQL are hosted in my homelab, which the exception of Docker hub.
 
