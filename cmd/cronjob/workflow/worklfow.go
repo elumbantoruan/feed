@@ -21,9 +21,7 @@ func New(client *client.GrpcClient, logger *slog.Logger) Workflow {
 	}
 }
 
-func (w Workflow) Run() error {
-
-	ctx := context.Background()
+func (w Workflow) Run(ctx context.Context) error {
 
 	sites, err := w.Client.GetSitesFeed(ctx)
 	if err != nil {

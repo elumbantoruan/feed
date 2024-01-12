@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"github/elumbantoruan/feed/cmd/cronjob/config"
 	"github/elumbantoruan/feed/cmd/cronjob/workflow"
 	"github/elumbantoruan/feed/pkg/grpc/client"
@@ -28,7 +29,9 @@ func main() {
 	}
 
 	workflow := workflow.New(svc, logger)
-	err = workflow.Run()
+	ctx := context.Background()
+
+	err = workflow.Run(ctx)
 	if err != nil {
 		logger.Error("main - run worklow", slog.Any("error", err))
 		os.Exit(1)

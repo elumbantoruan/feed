@@ -20,7 +20,11 @@ type Crawler interface {
 	Download(url string) (*feed.Feed, error)
 }
 
-func download[T any](url string) (*T, error) {
+type Content interface {
+	feed.Atom | feed.Rss
+}
+
+func download[T Content](url string) (*T, error) {
 
 	data, err := downloader(url)
 	if err != nil {
