@@ -36,7 +36,7 @@ func (w Workflow) Run(ctx context.Context) error {
 
 		f, err := cr.Download(site.RSS)
 		if err != nil {
-			w.Logger.Error("crawler download: ", err)
+			w.Logger.Error("Run - Download", slog.Any("error", err))
 		}
 		f.ID = site.ID
 
@@ -48,14 +48,14 @@ func (w Workflow) Run(ctx context.Context) error {
 
 			err = w.Client.UpdateSiteFeed(ctx, *f)
 			if err != nil {
-				w.Logger.Error("UpdateFeed", err)
+				w.Logger.Error("Run - UpdateFeed", slog.Any("error", err))
 			}
 		}
 
 		for _, article := range f.Articles {
 			id, err := w.Client.AddArticle(ctx, article, site.ID)
 			if err != nil {
-				w.Logger.Error("AddArticle", err)
+				w.Logger.Error("Run - AddArticle", slog.Any("error", err))
 			}
 			if id == 0 {
 				w.Logger.Info("AddArticle - article not added", slog.String("Existing Article", article.Link))
