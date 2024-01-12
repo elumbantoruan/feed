@@ -3,9 +3,10 @@ package client
 import (
 	"context"
 	"fmt"
-	"github/elumbantoruan/feed/pkg/feed"
-	pb "github/elumbantoruan/feed/pkg/feedproto"
 	"time"
+
+	"github.com/elumbantoruan/feed/pkg/feed"
+	pb "github.com/elumbantoruan/feed/pkg/feedproto"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"

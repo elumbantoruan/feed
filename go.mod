@@ -1,4 +1,4 @@
-module github/elumbantoruan/feed
+module github.com/elumbantoruan/feed
 
 go 1.21.0
 

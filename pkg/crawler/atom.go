@@ -2,7 +2,8 @@ package crawler
 
 import (
 	"fmt"
-	"github/elumbantoruan/feed/pkg/feed"
+
+	"github.com/elumbantoruan/feed/pkg/feed"
 )
 
 type AtomCrawler struct {

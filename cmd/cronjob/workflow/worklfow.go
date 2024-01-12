@@ -2,8 +2,9 @@ package workflow
 
 import (
 	"context"
-	"github/elumbantoruan/feed/pkg/crawler"
-	"github/elumbantoruan/feed/pkg/grpc/client"
+
+	"github.com/elumbantoruan/feed/pkg/crawler"
+	"github.com/elumbantoruan/feed/pkg/grpc/client"
 
 	"log"
 	"log/slog"

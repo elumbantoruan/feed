@@ -1,8 +1,9 @@
 package crawler
 
 import (
-	"github/elumbantoruan/feed/pkg/feed"
 	"strings"
+
+	"github.com/elumbantoruan/feed/pkg/feed"
 )
 
 type RssCrawler struct {

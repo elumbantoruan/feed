@@ -3,10 +3,11 @@ package crawler
 import (
 	"encoding/xml"
 	"fmt"
-	"github/elumbantoruan/feed/pkg/feed"
 	"io"
 	"net/http"
 	"time"
+
+	"github.com/elumbantoruan/feed/pkg/feed"
 )
 
 func CrawlerFactory(site feed.Feed) Crawler {

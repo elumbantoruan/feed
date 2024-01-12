@@ -2,14 +2,15 @@ package main
 
 import (
 	"fmt"
-	"github/elumbantoruan/feed/cmd/grpc/server/config"
-	"github/elumbantoruan/feed/cmd/grpc/server/service"
-	pb "github/elumbantoruan/feed/pkg/feedproto"
-	"github/elumbantoruan/feed/pkg/storage"
 	"net"
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/elumbantoruan/feed/cmd/grpc/server/config"
+	"github.com/elumbantoruan/feed/cmd/grpc/server/service"
+	pb "github.com/elumbantoruan/feed/pkg/feedproto"
+	"github.com/elumbantoruan/feed/pkg/storage"
 
 	"log/slog"
 

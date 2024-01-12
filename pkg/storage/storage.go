@@ -7,9 +7,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github/elumbantoruan/feed/pkg/feed"
 	"strings"
 	"time"
+
+	"github.com/elumbantoruan/feed/pkg/feed"
 
 	_ "github.com/go-sql-driver/mysql"
 )

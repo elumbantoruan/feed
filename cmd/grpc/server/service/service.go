@@ -2,10 +2,11 @@ package service
 
 import (
 	"context"
-	"github/elumbantoruan/feed/pkg/feed"
-	pb "github/elumbantoruan/feed/pkg/feedproto"
-	"github/elumbantoruan/feed/pkg/storage"
 	"time"
+
+	"github.com/elumbantoruan/feed/pkg/feed"
+	pb "github.com/elumbantoruan/feed/pkg/feedproto"
+	"github.com/elumbantoruan/feed/pkg/storage"
 
 	"log/slog"
 

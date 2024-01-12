@@ -2,12 +2,13 @@ package main
 
 import (
 	"context"
-	"github/elumbantoruan/feed/cmd/cronjob/config"
-	"github/elumbantoruan/feed/cmd/cronjob/workflow"
-	"github/elumbantoruan/feed/pkg/grpc/client"
 	"log/slog"
 	"os"
 	"time"
+
+	"github.com/elumbantoruan/feed/cmd/cronjob/config"
+	"github.com/elumbantoruan/feed/cmd/cronjob/workflow"
+	"github.com/elumbantoruan/feed/pkg/grpc/client"
 )
 
 func main() {
