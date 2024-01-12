@@ -4,22 +4,28 @@ import (
 	"context"
 
 	"github.com/elumbantoruan/feed/pkg/crawler"
-	"github.com/elumbantoruan/feed/pkg/grpc/client"
+	"github.com/elumbantoruan/feed/pkg/feed"
 
 	"log"
 	"log/slog"
 )
 
 type Workflow struct {
-	Client *client.GrpcClient
-	Logger *slog.Logger
+	Client         GRCPFeedClient
+	Logger         *slog.Logger
+	DefaultCrawler crawler.Crawler
 }
 
-func New(client *client.GrpcClient, logger *slog.Logger) Workflow {
-	return Workflow{
-		Client: client,
-		Logger: logger,
+func New(client GRCPFeedClient, logger *slog.Logger, defaultCrawler ...crawler.Crawler) Workflow {
+	workflow := Workflow{
+		Client:         client,
+		Logger:         logger,
+		DefaultCrawler: defaultCrawler[0],
 	}
+	if len(defaultCrawler) != 0 {
+		workflow.DefaultCrawler = defaultCrawler[0]
+	}
+	return workflow
 }
 
 func (w Workflow) Run(ctx context.Context) error {
@@ -30,7 +36,14 @@ func (w Workflow) Run(ctx context.Context) error {
 	}
 
 	for _, site := range sites {
-		cr := crawler.CrawlerFactory(site)
+
+		var cr crawler.Crawler
+
+		if w.DefaultCrawler != nil {
+			cr = w.DefaultCrawler
+		} else {
+			cr = crawler.CrawlerFactory(site)
+		}
 
 		w.Logger.Info("Attempt to download", slog.String("url", site.RSS))
 
@@ -66,4 +79,12 @@ func (w Workflow) Run(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+type GRCPFeedClient interface {
+	AddSiteFeed(ctx context.Context, site feed.Feed) error
+	GetSitesFeed(ctx context.Context) ([]feed.Feed, error)
+	UpdateSiteFeed(ctx context.Context, feed feed.Feed) error
+	AddArticle(ctx context.Context, article feed.Article, siteID int64) (int64, error)
+	GetArticles(ctx context.Context) ([]feed.ArticleSite[int64], error)
 }
