@@ -18,9 +18,8 @@ type Workflow struct {
 
 func New(client GRCPFeedClient, logger *slog.Logger, defaultCrawler ...crawler.Crawler) Workflow {
 	workflow := Workflow{
-		Client:         client,
-		Logger:         logger,
-		DefaultCrawler: defaultCrawler[0],
+		Client: client,
+		Logger: logger,
 	}
 	if len(defaultCrawler) != 0 {
 		workflow.DefaultCrawler = defaultCrawler[0]
