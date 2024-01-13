@@ -4,22 +4,22 @@ import (
 	"context"
 
 	"github.com/elumbantoruan/feed/pkg/crawler"
-	"github.com/elumbantoruan/feed/pkg/feed"
+	"github.com/elumbantoruan/feed/pkg/grpc/client"
 
 	"log"
 	"log/slog"
 )
 
 type Workflow struct {
-	Client         GRCPFeedClient
+	GRPCClient     client.GRPCFeedClient
 	Logger         *slog.Logger
 	DefaultCrawler crawler.Crawler
 }
 
-func New(client GRCPFeedClient, logger *slog.Logger, defaultCrawler ...crawler.Crawler) Workflow {
+func New(grpcClient client.GRPCFeedClient, logger *slog.Logger, defaultCrawler ...crawler.Crawler) Workflow {
 	workflow := Workflow{
-		Client: client,
-		Logger: logger,
+		GRPCClient: grpcClient,
+		Logger:     logger,
 	}
 	if len(defaultCrawler) != 0 {
 		workflow.DefaultCrawler = defaultCrawler[0]
@@ -29,7 +29,7 @@ func New(client GRCPFeedClient, logger *slog.Logger, defaultCrawler ...crawler.C
 
 func (w Workflow) Run(ctx context.Context) error {
 
-	sites, err := w.Client.GetSitesFeed(ctx)
+	sites, err := w.GRPCClient.GetSitesFeed(ctx)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -58,14 +58,14 @@ func (w Workflow) Run(ctx context.Context) error {
 		} else {
 			w.Logger.Info("Update", slog.String("site", site.Site), slog.Time("current ts", *f.Updated), slog.Time("last ts", *site.Updated))
 
-			err = w.Client.UpdateSiteFeed(ctx, *f)
+			err = w.GRPCClient.UpdateSiteFeed(ctx, *f)
 			if err != nil {
 				w.Logger.Error("Run - UpdateFeed", slog.Any("error", err))
 			}
 		}
 
 		for _, article := range f.Articles {
-			id, err := w.Client.AddArticle(ctx, article, site.ID)
+			id, err := w.GRPCClient.AddArticle(ctx, article, site.ID)
 			if err != nil {
 				w.Logger.Error("Run - AddArticle", slog.Any("error", err))
 			}
@@ -78,13 +78,4 @@ func (w Workflow) Run(ctx context.Context) error {
 	}
 
 	return nil
-}
-
-type GRCPFeedClient interface {
-	AddSiteFeed(ctx context.Context, site feed.Feed) error
-	GetSitesFeed(ctx context.Context) ([]feed.Feed, error)
-	UpdateSiteFeed(ctx context.Context, feed feed.Feed) error
-	AddArticle(ctx context.Context, article feed.Article, siteID int64) (int64, error)
-	GetArticles(ctx context.Context) ([]feed.ArticleSite[int64], error)
-	GetArticlesWithSite(ctx context.Context, siteID int64, limit int32) ([]feed.Article, error)
 }

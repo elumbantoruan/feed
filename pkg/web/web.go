@@ -2,9 +2,11 @@ package web
 
 import (
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/elumbantoruan/feed/pkg/feed"
+	"github.com/elumbantoruan/feed/pkg/grpc/client"
 
 	"github.com/chasefleming/elem-go"
 	"github.com/chasefleming/elem-go/attrs"
@@ -17,14 +19,24 @@ const baseTitle = "News Feed"
 
 var title = baseTitle
 
-type Handler struct{}
+type Handler struct {
+	GRPCClient client.GRPCFeedClient
+	Logger     *slog.Logger
+}
 
-func (h Handler) RenderFeedsRoute(c *fiber.Ctx) error {
+func New(grpcClient client.GRPCFeedClient, logger *slog.Logger) *Handler {
+	return &Handler{
+		GRPCClient: grpcClient,
+		Logger:     logger,
+	}
+}
+
+func (h *Handler) RenderFeedsRoute(c *fiber.Ctx) error {
 	c.Type("html")
 	return c.SendString(h.renderFeeds(getFeeds()))
 }
 
-func (h Handler) UpdateFeedRoute(c *fiber.Ctx) error {
+func (h *Handler) UpdateFeedRoute(c *fiber.Ctx) error {
 	newDate := utils.CopyString(c.FormValue("date"))
 	if newDate != "" {
 		title = fmt.Sprintf("%s: %s", baseTitle, newDate)
@@ -34,7 +46,7 @@ func (h Handler) UpdateFeedRoute(c *fiber.Ctx) error {
 	return c.Redirect("/")
 }
 
-func (h Handler) createFeedNode(data feed.Feed) elem.Node {
+func (h *Handler) createFeedNode(data feed.Feed) elem.Node {
 	var dlist = elem.Dl(nil)
 
 	for _, article := range data.Articles {
@@ -60,7 +72,7 @@ func (h Handler) createFeedNode(data feed.Feed) elem.Node {
 	)
 }
 
-func (h Handler) renderFeeds(feeds feed.Feeds) string {
+func (h *Handler) renderFeeds(feeds feed.Feeds) string {
 
 	inputDateStyle := styles.Props{
 		styles.Width:           "200px",

@@ -14,11 +14,20 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-type GrpcClient struct {
+type grpcFeedClient struct {
 	serviceClient pb.FeedServiceClient
 }
 
-func NewGRPCClient(serverAddr string) (*GrpcClient, error) {
+type GRPCFeedClient interface {
+	AddSiteFeed(ctx context.Context, site feed.Feed) error
+	GetSitesFeed(ctx context.Context) ([]feed.Feed, error)
+	UpdateSiteFeed(ctx context.Context, feed feed.Feed) error
+	AddArticle(ctx context.Context, article feed.Article, siteID int64) (int64, error)
+	GetArticles(ctx context.Context) ([]feed.ArticleSite[int64], error)
+	GetArticlesWithSite(ctx context.Context, siteID int64, limit int32) ([]feed.Article, error)
+}
+
+func NewGRPCClient(serverAddr string) (*grpcFeedClient, error) {
 
 	conn, err := grpc.Dial(serverAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
@@ -27,10 +36,10 @@ func NewGRPCClient(serverAddr string) (*GrpcClient, error) {
 
 	client := pb.NewFeedServiceClient(conn)
 
-	return &GrpcClient{serviceClient: client}, nil
+	return &grpcFeedClient{serviceClient: client}, nil
 }
 
-func (g GrpcClient) AddSiteFeed(ctx context.Context, site feed.Feed) error {
+func (g grpcFeedClient) AddSiteFeed(ctx context.Context, site feed.Feed) error {
 	pbFeed := pb.Feed{
 		Site: site.Site,
 		Rss:  site.RSS,
@@ -40,7 +49,7 @@ func (g GrpcClient) AddSiteFeed(ctx context.Context, site feed.Feed) error {
 	return err
 }
 
-func (g GrpcClient) GetSitesFeed(ctx context.Context) ([]feed.Feed, error) {
+func (g grpcFeedClient) GetSitesFeed(ctx context.Context) ([]feed.Feed, error) {
 	var feeds []feed.Feed
 	pbfeeds, err := g.serviceClient.GetSitesFeed(ctx, &emptypb.Empty{})
 	if err != nil {
@@ -61,7 +70,7 @@ func (g GrpcClient) GetSitesFeed(ctx context.Context) ([]feed.Feed, error) {
 	return feeds, nil
 }
 
-func (g GrpcClient) UpdateSiteFeed(ctx context.Context, feed feed.Feed) error {
+func (g grpcFeedClient) UpdateSiteFeed(ctx context.Context, feed feed.Feed) error {
 	if feed.Updated == nil {
 		feed.Updated = &time.Time{}
 	}
@@ -78,7 +87,7 @@ func (g GrpcClient) UpdateSiteFeed(ctx context.Context, feed feed.Feed) error {
 	return err
 }
 
-func (g GrpcClient) AddArticle(ctx context.Context, article feed.Article, siteID int64) (int64, error) {
+func (g grpcFeedClient) AddArticle(ctx context.Context, article feed.Article, siteID int64) (int64, error) {
 	var authors []string
 	for _, author := range article.Authors {
 		authors = append(authors, author)
@@ -102,7 +111,7 @@ func (g GrpcClient) AddArticle(ctx context.Context, article feed.Article, siteID
 	return aid.Identifier, nil
 }
 
-func (g GrpcClient) GetArticles(ctx context.Context) ([]feed.ArticleSite[int64], error) {
+func (g grpcFeedClient) GetArticles(ctx context.Context) ([]feed.ArticleSite[int64], error) {
 	var articles []feed.ArticleSite[int64]
 	pbArticles, err := g.serviceClient.GetArticles(ctx, &emptypb.Empty{})
 	if err != nil {
@@ -125,7 +134,7 @@ func (g GrpcClient) GetArticles(ctx context.Context) ([]feed.ArticleSite[int64],
 	return articles, nil
 }
 
-func (g GrpcClient) GetArticlesWithSite(ctx context.Context, siteID int64, limit int32) ([]feed.Article, error) {
+func (g grpcFeedClient) GetArticlesWithSite(ctx context.Context, siteID int64, limit int32) ([]feed.Article, error) {
 	var articles []feed.Article
 	pbArticles, err := g.serviceClient.GetArticlesWithSite(ctx, &pb.SiteId{Id: siteID, LimitRecords: limit})
 	if err != nil {
