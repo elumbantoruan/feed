@@ -86,4 +86,5 @@ type GRCPFeedClient interface {
 	UpdateSiteFeed(ctx context.Context, feed feed.Feed) error
 	AddArticle(ctx context.Context, article feed.Article, siteID int64) (int64, error)
 	GetArticles(ctx context.Context) ([]feed.ArticleSite[int64], error)
+	GetArticlesWithSite(ctx context.Context, siteID int64, limit int32) ([]feed.Article, error)
 }

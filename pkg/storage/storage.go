@@ -25,6 +25,7 @@ type Storage[T any] interface {
 	GetArticle(ctx context.Context, id T) (*feed.Article, error)
 	GetArticleHash(ctx context.Context, hash string) (*feed.Article, error)
 	GetArticles(ctx context.Context) ([]feed.ArticleSite[T], error)
+	GetArticlesWithSite(ctx context.Context, siteID T, limit int32) ([]feed.Article, error)
 }
 
 type MySQLStorage struct {
@@ -258,6 +259,46 @@ func (ms *MySQLStorage) GetArticles(ctx context.Context) ([]feed.ArticleSite[int
 		items := strings.Split(authors, ", ")
 		for _, item := range items {
 			article.Article.Authors = append(article.Article.Authors, item)
+		}
+		articles = append(articles, article)
+	}
+	return articles, nil
+}
+
+func (ms *MySQLStorage) GetArticlesWithSite(ctx context.Context, siteID int64, limit int32) ([]feed.Article, error) {
+	query := "SELECT content_id, title, link, pub_date, description, content, authors FROM feed_content WHERE feed_site_id = ? ORDER BY id desc LIMIT ?"
+	db, err := sql.Open("mysql", ms.conn)
+	if err != nil {
+		return nil, err
+	}
+	defer db.Close()
+
+	selectQ, err := db.Prepare(query)
+	if err != nil {
+		return nil, err
+	}
+	defer selectQ.Close()
+
+	rows, err := selectQ.QueryContext(ctx, siteID, limit)
+	if err != nil {
+		return nil, err
+	}
+
+	var articles []feed.Article
+
+	for rows.Next() {
+		var (
+			authors string
+			article feed.Article
+		)
+
+		err := rows.Scan(&article.ID, &article.Title, &article.Link, &article.Published, &article.Description, &article.Content, &authors)
+		if err != nil {
+			return nil, err
+		}
+		items := strings.Split(authors, ", ")
+		for _, item := range items {
+			article.Authors = append(article.Authors, item)
 		}
 		articles = append(articles, article)
 	}

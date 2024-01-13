@@ -14,10 +14,16 @@ service FeedService {
     rpc UpdateSiteFeed(Feed) returns (google.protobuf.Empty);
     rpc AddArticle(ArticleSite) returns (ArticleIdentifier);
     rpc GetArticles(google.protobuf.Empty) returns (ArticlesSite);
+    rpc GetArticlesWithSite(SiteId) returns (Articles);
 }
 
 message Feeds {
     repeated Feed feeds = 1;
+}
+
+message SiteId {
+    int64 id = 1;
+    int32 limitRecords = 2;
 }
 
 message Feed {

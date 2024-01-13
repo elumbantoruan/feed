@@ -7,6 +7,7 @@ import (
 type Feed struct {
 	ID       int64      `json:"id"`
 	Site     string     `json:"site"`
+	SiteURL  string     `json:"siteURL"`
 	Icon     string     `json:"icon"`
 	Link     string     `json:"link"`
 	RSS      string     `json:"rss"`
@@ -36,3 +37,5 @@ type URLType struct {
 	URL  string
 	Type string
 }
+
+type Feeds []Feed

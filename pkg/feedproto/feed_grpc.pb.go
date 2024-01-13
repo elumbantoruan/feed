@@ -28,6 +28,7 @@ type FeedServiceClient interface {
 	UpdateSiteFeed(ctx context.Context, in *Feed, opts ...grpc.CallOption) (*empty.Empty, error)
 	AddArticle(ctx context.Context, in *ArticleSite, opts ...grpc.CallOption) (*ArticleIdentifier, error)
 	GetArticles(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*ArticlesSite, error)
+	GetArticlesWithSite(ctx context.Context, in *SiteId, opts ...grpc.CallOption) (*Articles, error)
 }
 
 type feedServiceClient struct {
@@ -83,6 +84,15 @@ func (c *feedServiceClient) GetArticles(ctx context.Context, in *empty.Empty, op
 	return out, nil
 }
 
+func (c *feedServiceClient) GetArticlesWithSite(ctx context.Context, in *SiteId, opts ...grpc.CallOption) (*Articles, error) {
+	out := new(Articles)
+	err := c.cc.Invoke(ctx, "/feedproto.FeedService/GetArticlesWithSite", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // FeedServiceServer is the server API for FeedService service.
 // All implementations must embed UnimplementedFeedServiceServer
 // for forward compatibility
@@ -92,6 +102,7 @@ type FeedServiceServer interface {
 	UpdateSiteFeed(context.Context, *Feed) (*empty.Empty, error)
 	AddArticle(context.Context, *ArticleSite) (*ArticleIdentifier, error)
 	GetArticles(context.Context, *empty.Empty) (*ArticlesSite, error)
+	GetArticlesWithSite(context.Context, *SiteId) (*Articles, error)
 	mustEmbedUnimplementedFeedServiceServer()
 }
 
@@ -113,6 +124,9 @@ func (UnimplementedFeedServiceServer) AddArticle(context.Context, *ArticleSite) 
 }
 func (UnimplementedFeedServiceServer) GetArticles(context.Context, *empty.Empty) (*ArticlesSite, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetArticles not implemented")
+}
+func (UnimplementedFeedServiceServer) GetArticlesWithSite(context.Context, *SiteId) (*Articles, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetArticlesWithSite not implemented")
 }
 func (UnimplementedFeedServiceServer) mustEmbedUnimplementedFeedServiceServer() {}
 
@@ -217,6 +231,24 @@ func _FeedService_GetArticles_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _FeedService_GetArticlesWithSite_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SiteId)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FeedServiceServer).GetArticlesWithSite(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/feedproto.FeedService/GetArticlesWithSite",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FeedServiceServer).GetArticlesWithSite(ctx, req.(*SiteId))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // FeedService_ServiceDesc is the grpc.ServiceDesc for FeedService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -243,6 +275,10 @@ var FeedService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetArticles",
 			Handler:    _FeedService_GetArticles_Handler,
+		},
+		{
+			MethodName: "GetArticlesWithSite",
+			Handler:    _FeedService_GetArticlesWithSite_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

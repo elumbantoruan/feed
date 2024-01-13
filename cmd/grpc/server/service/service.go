@@ -137,3 +137,31 @@ func (f feedServiceServer) GetArticles(ctx context.Context, e *empty.Empty) (*pb
 		ArticlesSite: articlespb,
 	}, nil
 }
+
+func (f *feedServiceServer) GetArticlesWithSite(ctx context.Context, in *pb.SiteId) (*pb.Articles, error) {
+	articles, err := f.storage.GetArticlesWithSite(ctx, in.Id, in.LimitRecords)
+	if err != nil {
+		f.logger.Error("GetArticlesWithSite", slog.Any("error", err))
+		return nil, err
+	}
+	var articlespb []*pb.Article
+	for _, article := range articles {
+		var authors []string
+		for _, author := range article.Authors {
+			authors = append(authors, author)
+		}
+		articlepb := pb.Article{
+			Id:          article.ID,
+			Title:       article.Title,
+			Link:        article.Link,
+			Published:   timestamppb.New(article.Published),
+			Description: article.Description,
+			Content:     article.Content,
+			Authors:     authors,
+		}
+		articlespb = append(articlespb, &articlepb)
+	}
+	return &pb.Articles{
+		Articles: articlespb,
+	}, nil
+}

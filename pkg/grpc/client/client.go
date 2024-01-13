@@ -124,3 +124,24 @@ func (g GrpcClient) GetArticles(ctx context.Context) ([]feed.ArticleSite[int64],
 
 	return articles, nil
 }
+
+func (g GrpcClient) GetArticlesWithSite(ctx context.Context, siteID int64, limit int32) ([]feed.Article, error) {
+	var articles []feed.Article
+	pbArticles, err := g.serviceClient.GetArticlesWithSite(ctx, &pb.SiteId{Id: siteID, LimitRecords: limit})
+	if err != nil {
+		return nil, err
+	}
+	for _, pbArticle := range pbArticles.Articles {
+		article := feed.Article{
+			ID:          pbArticle.Id,
+			Title:       pbArticle.Title,
+			Link:        pbArticle.Link,
+			Published:   pbArticle.Published.AsTime(),
+			Description: pbArticle.Description,
+			Content:     pbArticle.Content,
+		}
+		articles = append(articles, article)
+	}
+
+	return articles, nil
+}

@@ -38,6 +38,10 @@ func (m *MockGRPCClient) GetArticles(ctx context.Context) ([]feed.ArticleSite[in
 	return nil, nil
 }
 
+func (m *MockGRPCClient) GetArticlesWithSite(ctx context.Context, siteID int64, limit int32) ([]feed.Article, error) {
+	return nil, nil
+}
+
 func createTestFeedData(id int64) feed.Feed {
 	ts := time.Time{}
 	return feed.Feed{
