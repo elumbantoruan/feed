@@ -43,20 +43,32 @@ newsfeed-cronjob   */5 * * * *   False     0        3m44s           6h41m
 The gRPC is containerized and managed in Kubernetes.  
 Link to [source code](https://github.com/elumbantoruan/feed/tree/main/cmd/grpc/server).
 ```
-kubectl get services
-NAME            TYPE       CLUSTER-IP     EXTERNAL-IP   PORT(S)          AGE
-newsfeed-grpc   NodePort   10.97.150.39   <none>        9000:30008/TCP   6h50m
+kubectl get services newsfeed-grpc
+NAME            TYPE       CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE
+newsfeed-grpc   NodePort   10.102.73.165   <none>        9000:30008/TCP   13h
+```
+
+### Web
+
+The web is containerized and managed in Kubernetes.  
+Link to [source code](https://github.com/elumbantoruan/feed/tree/main/cmd/web).
+```
+kubectl get services newsfeed-web
+NAME           TYPE       CLUSTER-IP     EXTERNAL-IP   PORT(S)          AGE
+newsfeed-web   NodePort   10.101.3.164   <none>        5000:30010/TCP   35h
 ```
 
 ### pods
 ```
 kubectl get pods
 NAME                              READY   STATUS      RESTARTS   AGE
-newsfeed-cronjob-28415755-p7m5j   0/1     Completed   0          12m
-newsfeed-cronjob-28415760-q2c7n   0/1     Completed   0          7m6s
-newsfeed-cronjob-28415765-cvnmr   0/1     Completed   0          2m6s
-newsfeed-grpc-5fd97bfb69-k529n    1/1     Running     0          6h49m
-newsfeed-grpc-5fd97bfb69-v9hgf    1/1     Running     0          6h49m
+newsfeed-cronjob-28420980-76p28   0/1     Completed   0          11m
+newsfeed-cronjob-28420985-8tkxg   0/1     Completed   0          6m32s
+newsfeed-cronjob-28420990-2zdsz   0/1     Completed   0          92s
+newsfeed-grpc-5fd97bfb69-ns7ln    1/1     Running     0          13h
+newsfeed-grpc-5fd97bfb69-qsn5r    1/1     Running     0          13h
+newsfeed-web-6b665875cc-4mwhk     1/1     Running     0          35h
+newsfeed-web-6b665875cc-lxl4m     1/1     Running     0          35h
 ```
 
 ### MySQL
