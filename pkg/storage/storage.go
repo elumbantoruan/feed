@@ -161,12 +161,25 @@ func (ms *MySQLStorage) AddArticle(ctx context.Context, article feed.Article, si
 	}
 
 	query := fmt.Sprintf(`
-		INSERT INTO feed_content (
-			feed_site_id, content_id, title, link, pub_date, description, content, authors, hash
-		) VALUES (
-			?, ?, ?, ?,	?, ?, ?, ?, ?
-		)
+		INSERT INTO feed_content 
+			(feed_site_id, content_id, title, link, pub_date, description, content, authors, hash)
+		VALUES 
+			(?, ?, ?, ?, ?, ?, ?, ?, ?)
+		ON DUPLICATE KEY UPDATE
+			title = ?, 
+			link = ?, 
+			pub_date = ?, 
+			description = ?, 
+			content = ?, 
+			authors = ?, 
+			hash = ?;
 	`)
+
+	// INSERT INTO feed_content (
+	// 	feed_site_id, content_id, title, link, pub_date, description, content, authors, hash
+	// ) VALUES (
+	// 	?, ?, ?, ?,	?, ?, ?, ?, ?
+	// )
 
 	db, err := sql.Open("mysql", ms.conn)
 	if err != nil {
@@ -180,7 +193,8 @@ func (ms *MySQLStorage) AddArticle(ctx context.Context, article feed.Article, si
 	}
 	defer insert.Close()
 
-	r, err := insert.ExecContext(ctx, siteID, article.ID, article.Title, article.Link, article.Published, article.Description, article.Content, authors, hash)
+	r, err := insert.ExecContext(ctx, siteID, article.ID, article.Title, article.Link, article.Published, article.Description, article.Content, authors, hash,
+		article.Title, article.Link, article.Published, article.Description, article.Content, authors, hash)
 	if err != nil {
 		return -1, err
 	}
