@@ -26,5 +26,6 @@ CREATE TABLE IF NOT EXISTS feed_content (
     hash            VARCHAR(512),
     PRIMARY KEY     (id),
     FOREIGN KEY     (feed_site_id) REFERENCES feed_site(id) ON DELETE CASCADE,
-    UNIQUE INDEX    (hash)
+    UNIQUE INDEX    (hash),
+    UNIQUE INDEX    (content_id)
 )ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;

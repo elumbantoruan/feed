@@ -146,6 +146,9 @@ func (ms *MySQLStorage) AddArticle(ctx context.Context, article feed.Article, si
 			authors += ", "
 		}
 	}
+	// some site, the updated value changed but other fields remain the same
+	// let set it the same with published, and hashing will compute other fields
+	article.Updated = article.Published
 	data, _ := json.Marshal(article)
 	h := sha256.New()
 	h.Write(data)
