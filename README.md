@@ -79,4 +79,4 @@ At this point, MySQL database is not managed in Kubernetes, rather as a local in
 Link to [database schema](https://github.com/elumbantoruan/feed/tree/main/pkg/storage/db-script).
 
 ### Docker hub
-Link to [docker hub](https://hub.docker.com/repositories/edisonlt) for Cronjob and gRPC repositories.
+Link to [docker hub](https://hub.docker.com/repositories/edisonlt) for CronJob, Web UI and gRPC repositories.
