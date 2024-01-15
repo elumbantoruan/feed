@@ -80,3 +80,7 @@ Link to [database schema](https://github.com/elumbantoruan/feed/tree/main/pkg/st
 
 ### Docker hub
 Link to [docker hub](https://hub.docker.com/repositories/edisonlt) for CronJob, Web UI and gRPC repositories.
+
+## Components Diagram
+
+![Component](artifact/feed.jpg)
