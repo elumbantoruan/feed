@@ -1,12 +1,14 @@
 package web
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
+	"strings"
 	"time"
 
 	"github.com/elumbantoruan/feed/pkg/feed"
-	"github.com/elumbantoruan/feed/pkg/grpc/client"
+	"github.com/elumbantoruan/feed/pkg/web/storage"
 
 	"github.com/chasefleming/elem-go"
 	"github.com/chasefleming/elem-go/attrs"
@@ -15,33 +17,34 @@ import (
 	"github.com/gofiber/fiber/v2/utils"
 )
 
-const baseTitle = "News Feed"
-
-var title = baseTitle
+var title = "News Feed"
 
 type Handler struct {
-	GRPCClient client.GRPCFeedClient
-	Logger     *slog.Logger
+	webStorage *storage.WebStorage
+	logger     *slog.Logger
 }
 
-func New(grpcClient client.GRPCFeedClient, logger *slog.Logger) *Handler {
+func New(webStorage *storage.WebStorage, logger *slog.Logger) *Handler {
 	return &Handler{
-		GRPCClient: grpcClient,
-		Logger:     logger,
+		webStorage: webStorage,
+		logger:     logger,
 	}
 }
 
 func (h *Handler) RenderFeedsRoute(c *fiber.Ctx) error {
 	c.Type("html")
-	return c.SendString(h.renderFeeds(getFeeds()))
+	ctx := context.Background()
+	feeds, err := h.webStorage.GetArticles(ctx)
+	if err != nil {
+		return err
+	}
+	return c.SendString(h.renderFeeds(feeds))
 }
 
 func (h *Handler) UpdateFeedRoute(c *fiber.Ctx) error {
 	newDate := utils.CopyString(c.FormValue("date"))
 	if newDate != "" {
-		title = fmt.Sprintf("%s: %s", baseTitle, newDate)
-	} else {
-		title = baseTitle
+		title = fmt.Sprintf("%s: %s", title, newDate)
 	}
 	return c.Redirect("/")
 }
@@ -49,9 +52,24 @@ func (h *Handler) UpdateFeedRoute(c *fiber.Ctx) error {
 func (h *Handler) createFeedNode(data feed.Feed) elem.Node {
 	var dlist = elem.Dl(nil)
 
+	italicStyle := styles.Props{
+		styles.FontSize:  "10pt",
+		styles.FontStyle: "italic",
+	}
+
+	termStyle := styles.Props{
+		styles.FontSize:  "12pt",
+		styles.FontStyle: "bold",
+	}
+
 	for _, article := range data.Articles {
-		var dterm, ddesc1, ddesc2 *elem.Element
-		dterm = elem.Dt(nil, elem.H3(nil, elem.A(attrs.Props{attrs.Href: article.Link}, elem.Text(article.Title))))
+		var dterm, dpublished, ddesc1, ddesc2 *elem.Element
+		dterm = elem.Dt(attrs.Props{attrs.Style: termStyle.ToInline()}, elem.A(attrs.Props{attrs.Href: article.Link, attrs.Target: "_blank"}, elem.Text(article.Title)))
+
+		authors := strings.Join(article.Authors, ", ")
+		publishedDateAuthors := fmt.Sprintf("%s - %s", article.Published.String(), authors)
+		dpublished = elem.Dd(attrs.Props{attrs.Style: italicStyle.ToInline()}, elem.Text(publishedDateAuthors))
+
 		if article.Title != article.Description {
 			ddesc1 = elem.Dd(nil, elem.Text(article.Description))
 		}
@@ -59,12 +77,14 @@ func (h *Handler) createFeedNode(data feed.Feed) elem.Node {
 			ddesc2 = elem.Dd(nil, elem.Text(article.Content))
 		}
 		dlist.Children = append(dlist.Children, dterm)
+		dlist.Children = append(dlist.Children, dpublished)
 		if ddesc1 != nil {
 			dlist.Children = append(dlist.Children, ddesc1)
 		}
-		if ddesc2 != nil {
-			dlist.Children = append(dlist.Children, ddesc2)
-		}
+		_ = ddesc2
+		// if ddesc2 != nil {
+		// 	dlist.Children = append(dlist.Children, ddesc2)
+		// }
 	}
 	return elem.Li(nil,
 		elem.H2(nil, elem.Text(data.Site)),
@@ -121,7 +141,16 @@ func (h *Handler) renderFeeds(feeds feed.Feeds) string {
 			attrs.Props{attrs.Method: "post", attrs.Action: "/update"},
 			elem.Table(nil,
 				elem.Tr(nil,
-					elem.Td(attrs.Props{attrs.Width: "100px"}, elem.Input(attrs.Props{attrs.Type: "text", attrs.Name: "date", attrs.Placeholder: time.Now().String(), attrs.Style: inputDateStyle.ToInline()})),
+					elem.Td(attrs.Props{attrs.Width: "100px"},
+						elem.Input(
+							attrs.Props{
+								attrs.Type:        "text",
+								attrs.Name:        "date",
+								attrs.Placeholder: time.Now().String(),
+								attrs.Style:       inputDateStyle.ToInline(),
+							},
+						),
+					),
 					elem.Td(attrs.Props{attrs.Width: "200px"},
 						elem.Button(
 							attrs.Props{

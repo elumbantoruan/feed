@@ -48,9 +48,9 @@ NAME            TYPE       CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE
 newsfeed-grpc   NodePort   10.102.73.165   <none>        9000:30008/TCP   13h
 ```
 
-### Web
+### Web UI
 
-The web is containerized and managed in Kubernetes.  
+The web UI is containerized and managed in Kubernetes.  
 Link to [source code](https://github.com/elumbantoruan/feed/tree/main/cmd/web).
 ```
 kubectl get services newsfeed-web
@@ -58,17 +58,19 @@ NAME           TYPE       CLUSTER-IP     EXTERNAL-IP   PORT(S)          AGE
 newsfeed-web   NodePort   10.101.3.164   <none>        5000:30010/TCP   35h
 ```
 
+![WebUI](artifact/webui0.png)
+
 ### pods
 ```
 kubectl get pods
 NAME                              READY   STATUS      RESTARTS   AGE
-newsfeed-cronjob-28420980-76p28   0/1     Completed   0          11m
-newsfeed-cronjob-28420985-8tkxg   0/1     Completed   0          6m32s
-newsfeed-cronjob-28420990-2zdsz   0/1     Completed   0          92s
-newsfeed-grpc-5fd97bfb69-ns7ln    1/1     Running     0          13h
-newsfeed-grpc-5fd97bfb69-qsn5r    1/1     Running     0          13h
-newsfeed-web-6b665875cc-4mwhk     1/1     Running     0          35h
-newsfeed-web-6b665875cc-lxl4m     1/1     Running     0          35h
+newsfeed-cronjob-28421320-7jkvk   0/1     Completed   0          11m
+newsfeed-cronjob-28421325-n6r2r   0/1     Completed   0          6m25s
+newsfeed-cronjob-28421330-89zjh   0/1     Completed   0          85s
+newsfeed-grpc-5fd97bfb69-ns7ln    1/1     Running     0          18h
+newsfeed-grpc-5fd97bfb69-qsn5r    1/1     Running     0          18h
+newsfeed-web-6b665875cc-4mwhk     1/1     Running     0          41h
+newsfeed-web-6b665875cc-lxl4m     1/1     Running     0          41h
 ```
 
 ### MySQL

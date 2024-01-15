@@ -1,26 +1,50 @@
 package main
 
 import (
+	"fmt"
+	"log"
+	"log/slog"
 	"net/http"
+	"os"
+	"time"
 
+	"github.com/elumbantoruan/feed/cmd/web/config"
+	"github.com/elumbantoruan/feed/pkg/grpc/client"
 	"github.com/elumbantoruan/feed/pkg/web"
+	"github.com/elumbantoruan/feed/pkg/web/storage"
 	"github.com/gofiber/fiber/v2"
 	"github.com/heptiolabs/healthcheck"
 )
 
-const healthCheckEndpoint = ":8086"
-
 func main() {
 	app := fiber.New()
 
-	// Routes
-	var handler web.Handler
+	// components dependency
+	cfg, err := config.New()
+	if err != nil {
+		log.Fatal(err)
+	}
+	grpcClient, err := client.NewGRPCClient(cfg.GRPCServer)
+	if err != nil {
+		log.Fatal(err)
+	}
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	webstorage := storage.NewWebStorage(grpcClient)
+
+	// Web handler
+	var handler = web.New(webstorage, logger)
 	app.Get("/", handler.RenderFeedsRoute)
 	app.Post("/update", handler.UpdateFeedRoute)
 
 	health := healthcheck.NewHandler()
 
+	healthCheckEndpoint := fmt.Sprintf(":%s", cfg.HealthCheckPort)
+
 	go http.ListenAndServe(healthCheckEndpoint, health)
 
-	app.Listen(":5000")
+	logger.Info("Web UI start serving the service", slog.Time("Time", time.Now()))
+
+	if err := app.Listen(fmt.Sprintf(":%s", cfg.WebPort)); err != nil {
+		logger.Error("Problem encountered serving web server", slog.Any("error", err))
+	}
 }

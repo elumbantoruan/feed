@@ -148,6 +148,7 @@ func (g grpcFeedClient) GetArticlesWithSite(ctx context.Context, siteID int64, l
 			Published:   pbArticle.Published.AsTime(),
 			Description: pbArticle.Description,
 			Content:     pbArticle.Content,
+			Authors:     pbArticle.Authors,
 		}
 		articles = append(articles, article)
 	}
