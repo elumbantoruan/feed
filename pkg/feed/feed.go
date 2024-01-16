@@ -16,8 +16,8 @@ type Site[T any] struct {
 	Updated      *time.Time `json:"updated"`
 }
 
-type FeedSite struct {
-	Site     Site[any] `json:"site"`
+type FeedSite[T any] struct {
+	Site     Site[T]   `json:"site"`
 	Articles []Article `json:"articles"`
 }
 
@@ -50,9 +50,4 @@ type ArticleSite[T any] struct {
 	Article Article `json:"article"`
 }
 
-type URLType struct {
-	URL  string
-	Type string
-}
-
-type Feeds []Feed
+type FeedSites[T any] []FeedSite[T]

@@ -14,17 +14,17 @@ type MockGRPCClient struct {
 	UpdateSiteFeedCount int
 }
 
-func (m *MockGRPCClient) AddSiteFeed(ctx context.Context, site feed.Feed) error {
+func (m *MockGRPCClient) AddSite(ctx context.Context, site feed.Site[int64]) error {
 	return nil
 }
 
-func (m *MockGRPCClient) GetSitesFeed(ctx context.Context) ([]feed.Feed, error) {
+func (m *MockGRPCClient) GetSites(ctx context.Context) ([]feed.Site[int64], error) {
 	m.GetSitesCount++
-	feeds := []feed.Feed{createTestFeedData(1), createTestFeedData(2)}
-	return feeds, nil
+	sites := []feed.Site[int64]{createTestSite(1), createTestSite(2)}
+	return sites, nil
 }
 
-func (m *MockGRPCClient) UpdateSiteFeed(ctx context.Context, feed feed.Feed) error {
+func (m *MockGRPCClient) UpdateSite(ctx context.Context, site feed.Site[int64]) error {
 	m.UpdateSiteFeedCount++
 	return nil
 }
@@ -42,14 +42,28 @@ func (m *MockGRPCClient) GetArticlesWithSite(ctx context.Context, siteID int64, 
 	return nil, nil
 }
 
-func createTestFeedData(id int64) feed.Feed {
+func createTestSite(id int64) feed.Site[int64] {
 	ts := time.Time{}
-	return feed.Feed{
+	return feed.Site[int64]{
 		ID:      id,
 		Site:    fmt.Sprintf("TestSite%d", id),
 		Link:    fmt.Sprintf("http://testsite%d", id),
 		RSS:     fmt.Sprintf("http://testsite%d", id),
 		Type:    "test",
 		Updated: &ts,
+	}
+}
+
+func createTestFeedData(id int64) feed.FeedSite[int64] {
+	ts := time.Time{}
+	return feed.FeedSite[int64]{
+		Site: feed.Site[int64]{
+			ID:      id,
+			Site:    fmt.Sprintf("TestSite%d", id),
+			Link:    fmt.Sprintf("http://testsite%d", id),
+			RSS:     fmt.Sprintf("http://testsite%d", id),
+			Type:    "test",
+			Updated: &ts,
+		},
 	}
 }

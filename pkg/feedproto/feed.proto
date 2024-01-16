@@ -9,9 +9,9 @@ option go_package = "./pkg/feedproto";
 package feedproto;
 
 service FeedService {
-    rpc AddSiteFeed(Feed) returns (google.protobuf.Empty);
-    rpc GetSitesFeed(google.protobuf.Empty) returns (Feeds);
-    rpc UpdateSiteFeed(Feed) returns (google.protobuf.Empty);
+    rpc AddSite(Site) returns (google.protobuf.Empty);
+    rpc GetSites(google.protobuf.Empty) returns (Sites);
+    rpc UpdateSite(Site) returns (google.protobuf.Empty);
     rpc UpsertArticle(ArticleSite) returns (ArticleIdentifier);
     rpc GetArticles(google.protobuf.Empty) returns (ArticlesSite);
     rpc GetArticlesWithSite(SiteId) returns (Articles);
@@ -24,6 +24,24 @@ message Feeds {
 message SiteId {
     int64 id = 1;
     int32 limitRecords = 2;
+}
+
+message Sites {
+    repeated Site sites = 1;
+}
+
+message Site {
+    oneof idtype {
+        string ids = 1;
+        int64 id = 2;
+    }
+    string site = 3;
+    string icon = 4;
+    string link = 5;
+    string rss = 6;
+    string type = 7;
+    google.protobuf.Timestamp updated = 8;
+    string articles_hash = 9;
 }
 
 message Feed {

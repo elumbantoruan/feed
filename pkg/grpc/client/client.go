@@ -19,9 +19,9 @@ type grpcFeedClient struct {
 }
 
 type GRPCFeedClient interface {
-	AddSiteFeed(ctx context.Context, site feed.Feed) error
-	GetSitesFeed(ctx context.Context) ([]feed.Feed, error)
-	UpdateSiteFeed(ctx context.Context, feed feed.Feed) error
+	AddSite(ctx context.Context, site feed.Site[int64]) error
+	GetSites(ctx context.Context) ([]feed.Site[int64], error)
+	UpdateSite(ctx context.Context, site feed.Site[int64]) error
 	UpsertArticle(ctx context.Context, article feed.Article, siteID int64) (int64, error)
 	GetArticles(ctx context.Context) ([]feed.ArticleSite[int64], error)
 	GetArticlesWithSite(ctx context.Context, siteID int64, limit int32) ([]feed.Article, error)
@@ -39,51 +39,54 @@ func NewGRPCClient(serverAddr string) (*grpcFeedClient, error) {
 	return &grpcFeedClient{serviceClient: client}, nil
 }
 
-func (g grpcFeedClient) AddSiteFeed(ctx context.Context, site feed.Feed) error {
-	pbFeed := pb.Feed{
+func (g grpcFeedClient) AddSite(ctx context.Context, site feed.Site[int64]) error {
+	pbSite := pb.Site{
 		Site: site.Site,
 		Rss:  site.RSS,
 		Type: site.Type,
 	}
-	_, err := g.serviceClient.AddSiteFeed(ctx, &pbFeed)
+	_, err := g.serviceClient.AddSite(ctx, &pbSite)
 	return err
 }
 
-func (g grpcFeedClient) GetSitesFeed(ctx context.Context) ([]feed.Feed, error) {
-	var feeds []feed.Feed
-	pbfeeds, err := g.serviceClient.GetSitesFeed(ctx, &emptypb.Empty{})
+func (g grpcFeedClient) GetSites(ctx context.Context) ([]feed.Site[int64], error) {
+	var sites []feed.Site[int64]
+	pbsites, err := g.serviceClient.GetSites(ctx, &emptypb.Empty{})
 	if err != nil {
 		return nil, err
 	}
 
-	for _, pbfeed := range pbfeeds.Feeds {
-		ts := pbfeed.Updated.AsTime()
-		feed := feed.Feed{
-			ID:      pbfeed.Id,
-			Site:    pbfeed.Site,
-			RSS:     pbfeed.Rss,
-			Type:    pbfeed.Type,
-			Updated: &ts,
+	for _, pbsite := range pbsites.Sites {
+		ts := pbsite.Updated.AsTime()
+		site := feed.Site[int64]{
+			ID:           pbsite.GetId(), // from oneof in proto for either int64 or string
+			Site:         pbsite.Site,
+			RSS:          pbsite.Rss,
+			Type:         pbsite.Type,
+			Updated:      &ts,
+			ArticlesHash: pbsite.ArticlesHash,
 		}
-		feeds = append(feeds, feed)
+		sites = append(sites, site)
 	}
-	return feeds, nil
+
+	return sites, nil
 }
 
-func (g grpcFeedClient) UpdateSiteFeed(ctx context.Context, feed feed.Feed) error {
-	if feed.Updated == nil {
-		feed.Updated = &time.Time{}
+func (g grpcFeedClient) UpdateSite(ctx context.Context, site feed.Site[int64]) error {
+	if site.Updated == nil {
+		site.Updated = &time.Time{}
 	}
-	pbFeed := pb.Feed{
-		Id:      feed.ID,
-		Site:    feed.Site,
-		Icon:    feed.Icon,
-		Link:    feed.Link,
-		Rss:     feed.RSS,
-		Type:    feed.Type,
-		Updated: timestamppb.New(*feed.Updated),
+	pbSite := pb.Site{
+		Idtype:       &pb.Site_Id{Id: site.ID},
+		Site:         site.Site,
+		Icon:         site.Icon,
+		Link:         site.Link,
+		Rss:          site.RSS,
+		Type:         site.Type,
+		Updated:      timestamppb.New(*site.Updated),
+		ArticlesHash: site.ArticlesHash,
 	}
-	_, err := g.serviceClient.UpdateSiteFeed(ctx, &pbFeed)
+	_, err := g.serviceClient.UpdateSite(ctx, &pbSite)
 	return err
 }
 

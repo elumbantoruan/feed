@@ -23,9 +23,9 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type FeedServiceClient interface {
-	AddSiteFeed(ctx context.Context, in *Feed, opts ...grpc.CallOption) (*empty.Empty, error)
-	GetSitesFeed(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*Feeds, error)
-	UpdateSiteFeed(ctx context.Context, in *Feed, opts ...grpc.CallOption) (*empty.Empty, error)
+	AddSite(ctx context.Context, in *Site, opts ...grpc.CallOption) (*empty.Empty, error)
+	GetSites(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*Sites, error)
+	UpdateSite(ctx context.Context, in *Site, opts ...grpc.CallOption) (*empty.Empty, error)
 	UpsertArticle(ctx context.Context, in *ArticleSite, opts ...grpc.CallOption) (*ArticleIdentifier, error)
 	GetArticles(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*ArticlesSite, error)
 	GetArticlesWithSite(ctx context.Context, in *SiteId, opts ...grpc.CallOption) (*Articles, error)
@@ -39,27 +39,27 @@ func NewFeedServiceClient(cc grpc.ClientConnInterface) FeedServiceClient {
 	return &feedServiceClient{cc}
 }
 
-func (c *feedServiceClient) AddSiteFeed(ctx context.Context, in *Feed, opts ...grpc.CallOption) (*empty.Empty, error) {
+func (c *feedServiceClient) AddSite(ctx context.Context, in *Site, opts ...grpc.CallOption) (*empty.Empty, error) {
 	out := new(empty.Empty)
-	err := c.cc.Invoke(ctx, "/feedproto.FeedService/AddSiteFeed", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/feedproto.FeedService/AddSite", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *feedServiceClient) GetSitesFeed(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*Feeds, error) {
-	out := new(Feeds)
-	err := c.cc.Invoke(ctx, "/feedproto.FeedService/GetSitesFeed", in, out, opts...)
+func (c *feedServiceClient) GetSites(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*Sites, error) {
+	out := new(Sites)
+	err := c.cc.Invoke(ctx, "/feedproto.FeedService/GetSites", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *feedServiceClient) UpdateSiteFeed(ctx context.Context, in *Feed, opts ...grpc.CallOption) (*empty.Empty, error) {
+func (c *feedServiceClient) UpdateSite(ctx context.Context, in *Site, opts ...grpc.CallOption) (*empty.Empty, error) {
 	out := new(empty.Empty)
-	err := c.cc.Invoke(ctx, "/feedproto.FeedService/UpdateSiteFeed", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/feedproto.FeedService/UpdateSite", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -97,9 +97,9 @@ func (c *feedServiceClient) GetArticlesWithSite(ctx context.Context, in *SiteId,
 // All implementations must embed UnimplementedFeedServiceServer
 // for forward compatibility
 type FeedServiceServer interface {
-	AddSiteFeed(context.Context, *Feed) (*empty.Empty, error)
-	GetSitesFeed(context.Context, *empty.Empty) (*Feeds, error)
-	UpdateSiteFeed(context.Context, *Feed) (*empty.Empty, error)
+	AddSite(context.Context, *Site) (*empty.Empty, error)
+	GetSites(context.Context, *empty.Empty) (*Sites, error)
+	UpdateSite(context.Context, *Site) (*empty.Empty, error)
 	UpsertArticle(context.Context, *ArticleSite) (*ArticleIdentifier, error)
 	GetArticles(context.Context, *empty.Empty) (*ArticlesSite, error)
 	GetArticlesWithSite(context.Context, *SiteId) (*Articles, error)
@@ -110,14 +110,14 @@ type FeedServiceServer interface {
 type UnimplementedFeedServiceServer struct {
 }
 
-func (UnimplementedFeedServiceServer) AddSiteFeed(context.Context, *Feed) (*empty.Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method AddSiteFeed not implemented")
+func (UnimplementedFeedServiceServer) AddSite(context.Context, *Site) (*empty.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddSite not implemented")
 }
-func (UnimplementedFeedServiceServer) GetSitesFeed(context.Context, *empty.Empty) (*Feeds, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetSitesFeed not implemented")
+func (UnimplementedFeedServiceServer) GetSites(context.Context, *empty.Empty) (*Sites, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetSites not implemented")
 }
-func (UnimplementedFeedServiceServer) UpdateSiteFeed(context.Context, *Feed) (*empty.Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpdateSiteFeed not implemented")
+func (UnimplementedFeedServiceServer) UpdateSite(context.Context, *Site) (*empty.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateSite not implemented")
 }
 func (UnimplementedFeedServiceServer) UpsertArticle(context.Context, *ArticleSite) (*ArticleIdentifier, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpsertArticle not implemented")
@@ -141,56 +141,56 @@ func RegisterFeedServiceServer(s grpc.ServiceRegistrar, srv FeedServiceServer) {
 	s.RegisterService(&FeedService_ServiceDesc, srv)
 }
 
-func _FeedService_AddSiteFeed_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Feed)
+func _FeedService_AddSite_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Site)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(FeedServiceServer).AddSiteFeed(ctx, in)
+		return srv.(FeedServiceServer).AddSite(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/feedproto.FeedService/AddSiteFeed",
+		FullMethod: "/feedproto.FeedService/AddSite",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(FeedServiceServer).AddSiteFeed(ctx, req.(*Feed))
+		return srv.(FeedServiceServer).AddSite(ctx, req.(*Site))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _FeedService_GetSitesFeed_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _FeedService_GetSites_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(empty.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(FeedServiceServer).GetSitesFeed(ctx, in)
+		return srv.(FeedServiceServer).GetSites(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/feedproto.FeedService/GetSitesFeed",
+		FullMethod: "/feedproto.FeedService/GetSites",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(FeedServiceServer).GetSitesFeed(ctx, req.(*empty.Empty))
+		return srv.(FeedServiceServer).GetSites(ctx, req.(*empty.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _FeedService_UpdateSiteFeed_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Feed)
+func _FeedService_UpdateSite_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Site)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(FeedServiceServer).UpdateSiteFeed(ctx, in)
+		return srv.(FeedServiceServer).UpdateSite(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/feedproto.FeedService/UpdateSiteFeed",
+		FullMethod: "/feedproto.FeedService/UpdateSite",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(FeedServiceServer).UpdateSiteFeed(ctx, req.(*Feed))
+		return srv.(FeedServiceServer).UpdateSite(ctx, req.(*Site))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -257,16 +257,16 @@ var FeedService_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*FeedServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "AddSiteFeed",
-			Handler:    _FeedService_AddSiteFeed_Handler,
+			MethodName: "AddSite",
+			Handler:    _FeedService_AddSite_Handler,
 		},
 		{
-			MethodName: "GetSitesFeed",
-			Handler:    _FeedService_GetSitesFeed_Handler,
+			MethodName: "GetSites",
+			Handler:    _FeedService_GetSites_Handler,
 		},
 		{
-			MethodName: "UpdateSiteFeed",
-			Handler:    _FeedService_UpdateSiteFeed_Handler,
+			MethodName: "UpdateSite",
+			Handler:    _FeedService_UpdateSite_Handler,
 		},
 		{
 			MethodName: "UpsertArticle",

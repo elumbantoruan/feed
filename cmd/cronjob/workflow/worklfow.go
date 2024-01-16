@@ -2,6 +2,9 @@ package workflow
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/json"
+	"fmt"
 	"runtime"
 
 	"github.com/elumbantoruan/feed/pkg/crawler"
@@ -14,10 +17,10 @@ import (
 type Workflow struct {
 	GRPCClient     client.GRPCFeedClient
 	Logger         *slog.Logger
-	DefaultCrawler crawler.Crawler
+	DefaultCrawler crawler.Crawler[int64]
 }
 
-func New(grpcClient client.GRPCFeedClient, logger *slog.Logger, defaultCrawler ...crawler.Crawler) Workflow {
+func New(grpcClient client.GRPCFeedClient, logger *slog.Logger, defaultCrawler ...crawler.Crawler[int64]) Workflow {
 	workflow := Workflow{
 		GRPCClient: grpcClient,
 		Logger:     logger,
@@ -44,7 +47,7 @@ type Metric struct {
 }
 
 func (w Workflow) Run(ctx context.Context) (Results, error) {
-	sites, err := w.GRPCClient.GetSitesFeed(ctx)
+	sites, err := w.GRPCClient.GetSites(ctx)
 	if err != nil {
 		w.Logger.Error("Run", slog.Any("error", err))
 		return nil, err
@@ -54,7 +57,7 @@ func (w Workflow) Run(ctx context.Context) (Results, error) {
 	w.Logger.Info("Run", slog.Int("Number of worker pools", workerPools))
 
 	jobs := len(sites)
-	siteC := make(chan feed.Feed, jobs)
+	siteC := make(chan feed.Site[int64], jobs)
 	resultC := make(chan Result, jobs)
 
 	for i := 1; i <= workerPools; i++ {
@@ -83,9 +86,9 @@ func (w Workflow) Run(ctx context.Context) (Results, error) {
 	return results, nil
 }
 
-func (w Workflow) worker(ctx context.Context, wID int, siteC <-chan feed.Feed, resultC chan<- Result) {
+func (w Workflow) worker(ctx context.Context, wID int, siteC <-chan feed.Site[int64], resultC chan<- Result) {
 	for site := range siteC {
-		var cr crawler.Crawler
+		var cr crawler.Crawler[int64]
 
 		if w.DefaultCrawler != nil {
 			cr = w.DefaultCrawler
@@ -101,16 +104,19 @@ func (w Workflow) worker(ctx context.Context, wID int, siteC <-chan feed.Feed, r
 			resultC <- Result{WorkerID: wID, Metric: Metric{Site: site.Site}, Error: err}
 			return
 		}
-		f.ID = site.ID
+		f.Site.ID = site.ID
 
-		if f.Updated.Equal(*site.Updated) {
+		articlesHash := computeHash(f.Articles)
+
+		if articlesHash == site.ArticlesHash { // f.Updated.Equal(*site.Updated) {
 			// no update
 			resultC <- Result{WorkerID: wID, Metric: Metric{Site: site.Site}, Error: nil}
 			return
 		} else {
-			w.Logger.Info("Update", slog.String("site", site.Site), slog.Time("current ts", *f.Updated), slog.Time("last ts", *site.Updated))
+			w.Logger.Info("Update", slog.String("site", site.Site), slog.Time("current ts", *f.Site.Updated), slog.Time("last ts", *site.Updated))
 
-			err = w.GRPCClient.UpdateSiteFeed(ctx, *f)
+			f.Site.ArticlesHash = articlesHash
+			err = w.GRPCClient.UpdateSite(ctx, f.Site)
 			if err != nil {
 				w.Logger.Error("Run - UpdateFeed", slog.Any("error", err))
 				resultC <- Result{WorkerID: wID, Metric: Metric{Site: site.Site}, Error: err}
@@ -142,4 +148,13 @@ func (w Workflow) worker(ctx context.Context, wID int, siteC <-chan feed.Feed, r
 		}
 		resultC <- Result{WorkerID: wID, Metric: Metric{Site: site.Site, Updated: updated, NewArticles: newArticle, UpdatedArticles: updatedArticle}, Error: err}
 	}
+}
+
+func computeHash(articles []feed.Article) string {
+	data, _ := json.Marshal(articles)
+	h := sha256.New()
+	h.Write(data)
+	bs := h.Sum(nil)
+	hash := fmt.Sprintf("%x", bs)
+	return hash
 }

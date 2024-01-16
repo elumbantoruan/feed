@@ -30,12 +30,12 @@ func NewFeedServiceServer(st storage.Storage[int64], logger *slog.Logger) feedpr
 
 func (f feedServiceServer) AddSiteFeed(ctx context.Context, pbfeed *pb.Feed) (*empty.Empty, error) {
 
-	feed := feed.Feed{
+	site := feed.Site[int64]{
 		Site: pbfeed.Site,
 		RSS:  pbfeed.Rss,
 		Type: pbfeed.Type,
 	}
-	_, err := f.storage.AddSiteFeed(ctx, feed)
+	_, err := f.storage.AddSite(ctx, site)
 	if err != nil {
 		f.logger.Error("AddSiteFeed", slog.Any("error", err))
 		return nil, err
@@ -43,38 +43,41 @@ func (f feedServiceServer) AddSiteFeed(ctx context.Context, pbfeed *pb.Feed) (*e
 	return &empty.Empty{}, nil
 }
 
-func (f feedServiceServer) GetSitesFeed(ctx context.Context, e *empty.Empty) (*pb.Feeds, error) {
+func (f feedServiceServer) GetSites(ctx context.Context, e *empty.Empty) (*pb.Sites, error) {
 
-	sites, err := f.storage.GetSitesFeed(ctx)
+	sites, err := f.storage.GetSites(ctx)
 	if err != nil {
-		f.logger.Error("GetSitesFeed", slog.Any("error", err))
+		f.logger.Error("GetSites", slog.Any("error", err))
 		return nil, err
 	}
-	var pbFeeds []*pb.Feed
+	var pbSites []*pb.Site
 	for _, site := range sites {
 		if site.Updated == nil {
 			site.Updated = &time.Time{}
 		}
-		pbFeed := &pb.Feed{
-			Id:      site.ID,
-			Site:    site.Site,
-			Rss:     site.RSS,
-			Type:    site.Type,
-			Updated: timestamppb.New(*site.Updated),
+
+		id := &pb.Site_Id{Id: site.ID}
+		pbSite := &pb.Site{
+			Idtype:       id,
+			Site:         site.Site,
+			Rss:          site.RSS,
+			Type:         site.Type,
+			Updated:      timestamppb.New(*site.Updated),
+			ArticlesHash: site.ArticlesHash,
 		}
-		pbFeeds = append(pbFeeds, pbFeed)
+		pbSites = append(pbSites, pbSite)
 	}
-	return &pb.Feeds{Feeds: pbFeeds}, nil
+	return &pb.Sites{Sites: pbSites}, nil
 }
 
-func (f feedServiceServer) UpdateSiteFeed(ctx context.Context, pbfeed *pb.Feed) (*empty.Empty, error) {
-
-	ts := pbfeed.Updated.AsTime()
-	feed := feed.Feed{
-		ID:      pbfeed.Id,
-		Updated: &ts,
+func (f feedServiceServer) UpdateSite(ctx context.Context, pbsite *pb.Site) (*empty.Empty, error) {
+	ts := pbsite.Updated.AsTime()
+	site := feed.Site[int64]{
+		ID:           pbsite.GetId(),
+		Updated:      &ts,
+		ArticlesHash: pbsite.ArticlesHash,
 	}
-	err := f.storage.UpdateSiteFeed(ctx, feed)
+	err := f.storage.UpdateSite(ctx, site)
 	if err != nil {
 		f.logger.Error("UpdateSiteFeed", slog.Any("error", err))
 		return nil, err

@@ -10,15 +10,15 @@ import (
 	"github.com/elumbantoruan/feed/pkg/feed"
 )
 
-func CrawlerFactory(site feed.Feed) Crawler {
+func CrawlerFactory(site feed.Site[int64]) Crawler[int64] {
 	if site.Type == "atom" {
 		return NewAtomCrawler(site.RSS)
 	}
 	return NewRssCrawler(site.RSS)
 }
 
-type Crawler interface {
-	Download(url string) (*feed.Feed, error)
+type Crawler[T any] interface {
+	Download(url string) (*feed.FeedSite[T], error)
 }
 
 type Content interface {

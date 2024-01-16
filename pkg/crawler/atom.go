@@ -16,7 +16,7 @@ func NewAtomCrawler(url string) *AtomCrawler {
 	}
 }
 
-func (ac *AtomCrawler) Download(url string) (*feed.Feed, error) {
+func (ac *AtomCrawler) Download(url string) (*feed.FeedSite[int64], error) {
 	atom, err := download[feed.Atom](url)
 	if err != nil {
 		return nil, err
@@ -24,17 +24,19 @@ func (ac *AtomCrawler) Download(url string) (*feed.Feed, error) {
 	return ac.ConvertToFeed(atom)
 }
 
-func (ac *AtomCrawler) ConvertToFeed(a *feed.Atom) (*feed.Feed, error) {
+func (ac *AtomCrawler) ConvertToFeed(a *feed.Atom) (*feed.FeedSite[int64], error) {
 	updated, err := parseDateTime(a.Updated)
 	if err != nil {
 		return nil, err
 	}
-	f := &feed.Feed{
-		Site:    a.Title,
-		Updated: &updated,
-		Link:    a.Link.Href,
-		Icon:    a.Icon,
-		RSS:     a.ID,
+	f := &feed.FeedSite[int64]{
+		Site: feed.Site[int64]{
+			Site:    a.Title,
+			Updated: &updated,
+			Link:    a.Link.Href,
+			Icon:    a.Icon,
+			RSS:     a.ID,
+		},
 	}
 
 	for _, entry := range a.Entry {

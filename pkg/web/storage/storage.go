@@ -18,9 +18,9 @@ func NewWebStorage(grpcClient client.GRPCFeedClient) *WebStorage {
 	}
 }
 
-func (w *WebStorage) GetArticles(ctx context.Context) (feed.Feeds, error) {
-	var feeds feed.Feeds
-	sites, err := w.GRCPClient.GetSitesFeed(ctx)
+func (w *WebStorage) GetArticles(ctx context.Context) (feed.FeedSites[int64], error) {
+	var feeds feed.FeedSites[int64]
+	sites, err := w.GRCPClient.GetSites(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("GetArticles.GetSitesFeed error: %w", err)
 	}
@@ -29,8 +29,11 @@ func (w *WebStorage) GetArticles(ctx context.Context) (feed.Feeds, error) {
 		if err != nil {
 			return nil, fmt.Errorf("GetArticles.GetArticlesWithSite error: %w", err)
 		}
-		site.Articles = articles
-		feeds = append(feeds, site)
+		feedSite := feed.FeedSite[int64]{
+			Site:     site,
+			Articles: articles,
+		}
+		feeds = append(feeds, feedSite)
 	}
 	return feeds, nil
 }

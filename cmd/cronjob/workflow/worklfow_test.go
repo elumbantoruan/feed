@@ -12,7 +12,7 @@ import (
 
 func TestWorkflow_Run(t *testing.T) {
 	client := mock.MockGRPCClient{}
-	crawler := mock.MockCrawler{}
+	crawler := mock.MockCrawler[int64]{}
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 
 	work := New(&client, logger, &crawler)

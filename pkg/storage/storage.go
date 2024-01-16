@@ -16,10 +16,11 @@ import (
 )
 
 type Storage[T any] interface {
-	AddSiteFeed(ctx context.Context, feed feed.Feed) (T, error)
+	AddSite(ctx context.Context, feed feed.Site[T]) (T, error)
 	GetSitesFeed(ctx context.Context) ([]feed.Feed, error)
-	GetSiteFeed(ctx context.Context, siteID T) (*feed.Feed, error)
 	UpdateSiteFeed(ctx context.Context, feed feed.Feed) error
+	GetSites(ctx context.Context) ([]feed.Site[T], error)
+	UpdateSite(ctx context.Context, site feed.Site[T]) error
 	UpsertArticle(ctx context.Context, article feed.Article, siteID T) (T, error)
 	AddArticles(ctx context.Context, articles []feed.Article) error
 	GetArticle(ctx context.Context, id T) (*feed.Article, error)
@@ -43,7 +44,7 @@ func NewMySQLStorage(conn string) (Storage[int64], error) {
 	}, nil
 }
 
-func (ms *MySQLStorage) AddSiteFeed(ctx context.Context, feed feed.Feed) (int64, error) {
+func (ms *MySQLStorage) AddSite(ctx context.Context, site feed.Site[int64]) (int64, error) {
 	query := fmt.Sprintf(`
 		INSERT INTO feed_site (
 			name, url, type, updated
@@ -64,12 +65,45 @@ func (ms *MySQLStorage) AddSiteFeed(ctx context.Context, feed feed.Feed) (int64,
 	}
 	defer insert.Close()
 
-	r, err := insert.ExecContext(ctx, feed.Site, feed.RSS, feed.Type, time.Now())
+	r, err := insert.ExecContext(ctx, site.Site, site.RSS, site.Type, time.Now())
 	if err != nil {
 		return -1, err
 	}
 
 	return r.LastInsertId()
+}
+
+func (ms *MySQLStorage) GetSites(ctx context.Context) ([]feed.Site[int64], error) {
+	db, err := sql.Open("mysql", ms.conn)
+	if err != nil {
+		return nil, err
+	}
+	defer db.Close()
+
+	query := "SELECT id, name, url, type, updated, articles_hash FROM feed_site"
+	selectQ, err := db.Prepare(query)
+	if err != nil {
+		return nil, err
+	}
+	defer selectQ.Close()
+
+	rows, err := selectQ.QueryContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+	var sites []feed.Site[int64]
+
+	for rows.Next() {
+		var site feed.Site[int64]
+
+		err := rows.Scan(&site.ID, &site.Site, &site.RSS, &site.Type, &site.Updated, &site.ArticlesHash)
+		if err != nil {
+			return nil, err
+		}
+		sites = append(sites, site)
+	}
+
+	return sites, nil
 }
 
 func (ms *MySQLStorage) GetSitesFeed(ctx context.Context) ([]feed.Feed, error) {
@@ -104,8 +138,35 @@ func (ms *MySQLStorage) GetSitesFeed(ctx context.Context) ([]feed.Feed, error) {
 
 	return feedSites, nil
 }
-func (ms *MySQLStorage) GetSiteFeed(ctx context.Context, id int64) (*feed.Feed, error) {
-	return nil, nil
+
+func (ms *MySQLStorage) UpdateSite(ctx context.Context, feed feed.Site[int64]) error {
+	query := fmt.Sprintf("UPDATE feed_site SET feed_site.updated = ?, feed_site.articles_hash = ? WHERE feed_site.id = ?")
+
+	db, err := sql.Open("mysql", ms.conn)
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+
+	update, err := db.Prepare(query)
+	if err != nil {
+		return err
+	}
+	defer update.Close()
+
+	r, err := update.ExecContext(ctx, feed.Updated, feed.ArticlesHash, feed.ID)
+	if err != nil {
+		return err
+	}
+
+	if v, err := r.RowsAffected(); err != nil || v == 0 {
+		if v == 0 {
+			return fmt.Errorf("MySQLStorage.UpdateSite. No record being updated for siteID: %d", feed.ID)
+		} else if err != nil {
+			return fmt.Errorf("MySQLStorage.UpdateSite: %w", err)
+		}
+	}
+	return nil
 }
 
 func (ms *MySQLStorage) UpdateSiteFeed(ctx context.Context, feed feed.Feed) error {

@@ -16,7 +16,7 @@ func NewRssCrawler(url string) *RssCrawler {
 	}
 }
 
-func (rc *RssCrawler) Download(url string) (*feed.Feed, error) {
+func (rc *RssCrawler) Download(url string) (*feed.FeedSite[int64], error) {
 	rss, err := download[feed.Rss](url)
 	if err != nil {
 		return nil, err
@@ -25,7 +25,7 @@ func (rc *RssCrawler) Download(url string) (*feed.Feed, error) {
 	return rc.ConvertToFeed(rss)
 }
 
-func (rc *RssCrawler) ConvertToFeed(r *feed.Rss) (*feed.Feed, error) {
+func (rc *RssCrawler) ConvertToFeed(r *feed.Rss) (*feed.FeedSite[int64], error) {
 	recentItemPubDate := r.Channel.LastBuildDate
 	if recentItemPubDate == "" && len(r.Channel.Item) > 0 {
 		recentItemPubDate = r.Channel.Item[0].PubDate
@@ -35,11 +35,13 @@ func (rc *RssCrawler) ConvertToFeed(r *feed.Rss) (*feed.Feed, error) {
 	if err != nil {
 		return nil, err
 	}
-	f := &feed.Feed{
-		Site:    r.Channel.Title,
-		Link:    r.Channel.Link.Href,
-		Updated: &pubDate,
-		RSS:     r.URL,
+	f := &feed.FeedSite[int64]{
+		Site: feed.Site[int64]{
+			Site:    r.Channel.Title,
+			Link:    r.Channel.Link.Href,
+			Updated: &pubDate,
+			RSS:     r.URL,
+		},
 	}
 	for _, item := range r.Channel.Item {
 		published, err := parseDateTime(item.PubDate)
