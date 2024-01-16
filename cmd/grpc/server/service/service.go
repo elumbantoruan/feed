@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/elumbantoruan/feed/pkg/feed"
+	"github.com/elumbantoruan/feed/pkg/feedproto"
 	pb "github.com/elumbantoruan/feed/pkg/feedproto"
 	"github.com/elumbantoruan/feed/pkg/storage"
 
@@ -20,7 +21,7 @@ type feedServiceServer struct {
 	logger  *slog.Logger
 }
 
-func NewFeedServiceServer(st storage.Storage[int64], logger *slog.Logger) *feedServiceServer {
+func NewFeedServiceServer(st storage.Storage[int64], logger *slog.Logger) feedproto.FeedServiceServer {
 	return &feedServiceServer{
 		storage: st,
 		logger:  logger,
@@ -81,7 +82,7 @@ func (f feedServiceServer) UpdateSiteFeed(ctx context.Context, pbfeed *pb.Feed) 
 	return &empty.Empty{}, nil
 }
 
-func (f feedServiceServer) AddArticle(ctx context.Context, pbarticle *pb.ArticleSite) (*pb.ArticleIdentifier, error) {
+func (f feedServiceServer) UpsertArticle(ctx context.Context, pbarticle *pb.ArticleSite) (*pb.ArticleIdentifier, error) {
 	var authors []string
 	for _, author := range pbarticle.Article.Authors {
 		authors = append(authors, author)
@@ -96,9 +97,9 @@ func (f feedServiceServer) AddArticle(ctx context.Context, pbarticle *pb.Article
 		Content:     pbarticle.Article.Content,
 		Authors:     authors,
 	}
-	id, err := f.storage.AddArticle(ctx, article, pbarticle.Siteid)
+	id, err := f.storage.UpsertArticle(ctx, article, pbarticle.Siteid)
 	if err != nil {
-		f.logger.Error("AddArticle", slog.Any("error", err))
+		f.logger.Error("UpsertArticle", slog.Any("error", err))
 		return nil, err
 	}
 	return &pb.ArticleIdentifier{

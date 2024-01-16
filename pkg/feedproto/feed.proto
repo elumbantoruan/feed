@@ -12,7 +12,7 @@ service FeedService {
     rpc AddSiteFeed(Feed) returns (google.protobuf.Empty);
     rpc GetSitesFeed(google.protobuf.Empty) returns (Feeds);
     rpc UpdateSiteFeed(Feed) returns (google.protobuf.Empty);
-    rpc AddArticle(ArticleSite) returns (ArticleIdentifier);
+    rpc UpsertArticle(ArticleSite) returns (ArticleIdentifier);
     rpc GetArticles(google.protobuf.Empty) returns (ArticlesSite);
     rpc GetArticlesWithSite(SiteId) returns (Articles);
 }

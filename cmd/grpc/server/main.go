@@ -5,6 +5,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"runtime"
 	"time"
 
 	"github.com/elumbantoruan/feed/cmd/grpc/server/config"
@@ -24,7 +25,7 @@ const (
 
 func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
-	logger.Info("main", slog.Time("start", time.Now()))
+	logger.Info("main", slog.Time("start", time.Now()), slog.Int("cpu count", runtime.NumCPU()))
 
 	config, _ := config.NewConfig()
 	st, err := storage.NewMySQLStorage(config.DBConn)

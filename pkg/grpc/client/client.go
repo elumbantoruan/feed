@@ -22,7 +22,7 @@ type GRPCFeedClient interface {
 	AddSiteFeed(ctx context.Context, site feed.Feed) error
 	GetSitesFeed(ctx context.Context) ([]feed.Feed, error)
 	UpdateSiteFeed(ctx context.Context, feed feed.Feed) error
-	AddArticle(ctx context.Context, article feed.Article, siteID int64) (int64, error)
+	UpsertArticle(ctx context.Context, article feed.Article, siteID int64) (int64, error)
 	GetArticles(ctx context.Context) ([]feed.ArticleSite[int64], error)
 	GetArticlesWithSite(ctx context.Context, siteID int64, limit int32) ([]feed.Article, error)
 }
@@ -87,7 +87,7 @@ func (g grpcFeedClient) UpdateSiteFeed(ctx context.Context, feed feed.Feed) erro
 	return err
 }
 
-func (g grpcFeedClient) AddArticle(ctx context.Context, article feed.Article, siteID int64) (int64, error) {
+func (g grpcFeedClient) UpsertArticle(ctx context.Context, article feed.Article, siteID int64) (int64, error) {
 	var authors []string
 	for _, author := range article.Authors {
 		authors = append(authors, author)
@@ -104,7 +104,7 @@ func (g grpcFeedClient) AddArticle(ctx context.Context, article feed.Article, si
 			Authors:     authors,
 		},
 	}
-	aid, err := g.serviceClient.AddArticle(ctx, pbArticleSite)
+	aid, err := g.serviceClient.UpsertArticle(ctx, pbArticleSite)
 	if err != nil {
 		return -1, err
 	}

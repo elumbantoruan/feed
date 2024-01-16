@@ -3,12 +3,13 @@ CREATE SCHEMA IF NOT EXISTS feed;
 USE feed;
 
 CREATE TABLE IF NOT EXISTS feed_site (
-    id 		    INT 			NOT NULL AUTO_INCREMENT,
-	name 	    VARCHAR(255) 	NOT NULL,
-    url 	    VARCHAR(255) 	NOT NULL,
-    site_url 	VARCHAR(256)    NULL,
-    type 	    VARCHAR(8) 		NOT NULL,
-    updated     DATETIME        NULL,
+    id 		        INT 			NOT NULL AUTO_INCREMENT,
+	name 	        VARCHAR(255) 	NOT NULL,
+    url 	        VARCHAR(255) 	NOT NULL,
+    site_url 	    VARCHAR(256)    NULL,
+    type 	        VARCHAR(8) 		NOT NULL,
+    updated         DATETIME        NULL,
+    articles_hash   VARCHAR(512),
     PRIMARY KEY (id)
 )ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
 

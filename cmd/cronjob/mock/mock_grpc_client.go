@@ -29,7 +29,7 @@ func (m *MockGRPCClient) UpdateSiteFeed(ctx context.Context, feed feed.Feed) err
 	return nil
 }
 
-func (m *MockGRPCClient) AddArticle(ctx context.Context, article feed.Article, siteID int64) (int64, error) {
+func (m *MockGRPCClient) UpsertArticle(ctx context.Context, article feed.Article, siteID int64) (int64, error) {
 	m.AddArticleCount++
 	return int64(m.AddArticleCount), nil
 }

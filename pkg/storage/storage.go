@@ -20,7 +20,7 @@ type Storage[T any] interface {
 	GetSitesFeed(ctx context.Context) ([]feed.Feed, error)
 	GetSiteFeed(ctx context.Context, siteID T) (*feed.Feed, error)
 	UpdateSiteFeed(ctx context.Context, feed feed.Feed) error
-	AddArticle(ctx context.Context, article feed.Article, siteID T) (T, error)
+	UpsertArticle(ctx context.Context, article feed.Article, siteID T) (T, error)
 	AddArticles(ctx context.Context, articles []feed.Article) error
 	GetArticle(ctx context.Context, id T) (*feed.Article, error)
 	GetArticleHash(ctx context.Context, hash string) (*feed.Article, error)
@@ -138,7 +138,7 @@ func (ms *MySQLStorage) UpdateSiteFeed(ctx context.Context, feed feed.Feed) erro
 	return nil
 }
 
-func (ms *MySQLStorage) AddArticle(ctx context.Context, article feed.Article, siteID int64) (int64, error) {
+func (ms *MySQLStorage) UpsertArticle(ctx context.Context, article feed.Article, siteID int64) (int64, error) {
 	var authors string
 	for i, author := range article.Authors {
 		authors += author
@@ -160,9 +160,12 @@ func (ms *MySQLStorage) AddArticle(ctx context.Context, article feed.Article, si
 		return -1, fmt.Errorf("GetArticleHash %w", err)
 	}
 	if content != nil {
-		return 0, nil
+		// existing hash found
+		// -1 indicated no update
+		return -1, nil
 	}
 
+	// ON DUPLICATE KEY UPDATE means there are duplicate in unique index, thus UPDATE is performed
 	query := fmt.Sprintf(`
 		INSERT INTO feed_content 
 			(feed_site_id, content_id, title, link, pub_date, description, content, authors, hash)
@@ -177,12 +180,6 @@ func (ms *MySQLStorage) AddArticle(ctx context.Context, article feed.Article, si
 			authors = ?, 
 			hash = ?;
 	`)
-
-	// INSERT INTO feed_content (
-	// 	feed_site_id, content_id, title, link, pub_date, description, content, authors, hash
-	// ) VALUES (
-	// 	?, ?, ?, ?,	?, ?, ?, ?, ?
-	// )
 
 	db, err := sql.Open("mysql", ms.conn)
 	if err != nil {
@@ -200,6 +197,13 @@ func (ms *MySQLStorage) AddArticle(ctx context.Context, article feed.Article, si
 		article.Title, article.Link, article.Published, article.Description, article.Content, authors, hash)
 	if err != nil {
 		return -1, err
+	}
+
+	rowsUpdated, err := r.RowsAffected()
+	// rowsUpdated will be two if there are existing record and get updated.
+	// upsert inserts 1 (new record) delete 1 existing record
+	if rowsUpdated == 2 {
+		return 0, nil
 	}
 
 	return r.LastInsertId()

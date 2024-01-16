@@ -26,7 +26,7 @@ type FeedServiceClient interface {
 	AddSiteFeed(ctx context.Context, in *Feed, opts ...grpc.CallOption) (*empty.Empty, error)
 	GetSitesFeed(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*Feeds, error)
 	UpdateSiteFeed(ctx context.Context, in *Feed, opts ...grpc.CallOption) (*empty.Empty, error)
-	AddArticle(ctx context.Context, in *ArticleSite, opts ...grpc.CallOption) (*ArticleIdentifier, error)
+	UpsertArticle(ctx context.Context, in *ArticleSite, opts ...grpc.CallOption) (*ArticleIdentifier, error)
 	GetArticles(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*ArticlesSite, error)
 	GetArticlesWithSite(ctx context.Context, in *SiteId, opts ...grpc.CallOption) (*Articles, error)
 }
@@ -66,9 +66,9 @@ func (c *feedServiceClient) UpdateSiteFeed(ctx context.Context, in *Feed, opts .
 	return out, nil
 }
 
-func (c *feedServiceClient) AddArticle(ctx context.Context, in *ArticleSite, opts ...grpc.CallOption) (*ArticleIdentifier, error) {
+func (c *feedServiceClient) UpsertArticle(ctx context.Context, in *ArticleSite, opts ...grpc.CallOption) (*ArticleIdentifier, error) {
 	out := new(ArticleIdentifier)
-	err := c.cc.Invoke(ctx, "/feedproto.FeedService/AddArticle", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/feedproto.FeedService/UpsertArticle", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -100,7 +100,7 @@ type FeedServiceServer interface {
 	AddSiteFeed(context.Context, *Feed) (*empty.Empty, error)
 	GetSitesFeed(context.Context, *empty.Empty) (*Feeds, error)
 	UpdateSiteFeed(context.Context, *Feed) (*empty.Empty, error)
-	AddArticle(context.Context, *ArticleSite) (*ArticleIdentifier, error)
+	UpsertArticle(context.Context, *ArticleSite) (*ArticleIdentifier, error)
 	GetArticles(context.Context, *empty.Empty) (*ArticlesSite, error)
 	GetArticlesWithSite(context.Context, *SiteId) (*Articles, error)
 	mustEmbedUnimplementedFeedServiceServer()
@@ -119,8 +119,8 @@ func (UnimplementedFeedServiceServer) GetSitesFeed(context.Context, *empty.Empty
 func (UnimplementedFeedServiceServer) UpdateSiteFeed(context.Context, *Feed) (*empty.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateSiteFeed not implemented")
 }
-func (UnimplementedFeedServiceServer) AddArticle(context.Context, *ArticleSite) (*ArticleIdentifier, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method AddArticle not implemented")
+func (UnimplementedFeedServiceServer) UpsertArticle(context.Context, *ArticleSite) (*ArticleIdentifier, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpsertArticle not implemented")
 }
 func (UnimplementedFeedServiceServer) GetArticles(context.Context, *empty.Empty) (*ArticlesSite, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetArticles not implemented")
@@ -195,20 +195,20 @@ func _FeedService_UpdateSiteFeed_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
-func _FeedService_AddArticle_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _FeedService_UpsertArticle_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ArticleSite)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(FeedServiceServer).AddArticle(ctx, in)
+		return srv.(FeedServiceServer).UpsertArticle(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/feedproto.FeedService/AddArticle",
+		FullMethod: "/feedproto.FeedService/UpsertArticle",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(FeedServiceServer).AddArticle(ctx, req.(*ArticleSite))
+		return srv.(FeedServiceServer).UpsertArticle(ctx, req.(*ArticleSite))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -269,8 +269,8 @@ var FeedService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _FeedService_UpdateSiteFeed_Handler,
 		},
 		{
-			MethodName: "AddArticle",
-			Handler:    _FeedService_AddArticle_Handler,
+			MethodName: "UpsertArticle",
+			Handler:    _FeedService_UpsertArticle_Handler,
 		},
 		{
 			MethodName: "GetArticles",

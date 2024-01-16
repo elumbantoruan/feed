@@ -4,6 +4,23 @@ import (
 	"time"
 )
 
+type Site[T any] struct {
+	ID           T          `json:"id"`
+	Site         string     `json:"site"`
+	SiteURL      string     `json:"siteURL"`
+	Icon         string     `json:"icon"`
+	Link         string     `json:"link"`
+	RSS          string     `json:"rss"`
+	Type         string     `json:"type"`
+	ArticlesHash string     `json:"articlesHash"`
+	Updated      *time.Time `json:"updated"`
+}
+
+type FeedSite struct {
+	Site     Site[any] `json:"site"`
+	Articles []Article `json:"articles"`
+}
+
 type Feed struct {
 	ID       int64      `json:"id"`
 	Site     string     `json:"site"`
