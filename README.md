@@ -58,7 +58,7 @@ NAME           TYPE       CLUSTER-IP     EXTERNAL-IP   PORT(S)          AGE
 newsfeed-web   NodePort   10.101.3.164   <none>        5000:30010/TCP   35h
 ```
 
-![WebUI](artifact/webui0.png)
+![WebUI](artifact/webui1.png)
 
 ### pods
 ```
