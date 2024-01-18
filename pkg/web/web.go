@@ -22,6 +22,7 @@ var title = "News Feed"
 type Handler struct {
 	webStorage *storage.WebStorage
 	logger     *slog.Logger
+	firstTab   bool
 }
 
 func New(webStorage *storage.WebStorage, logger *slog.Logger) *Handler {

@@ -32,9 +32,8 @@ func main() {
 	webstorage := storage.NewWebStorage(grpcClient)
 
 	// Web handler
-	var handler = web.New(webstorage, logger)
-	app.Get("/", handler.RenderFeedsRoute)
-	app.Post("/update", handler.UpdateFeedRoute)
+	var handler = web.NewContent(webstorage, logger)
+	app.Get("/", handler.RenderContentRoute)
 
 	health := healthcheck.NewHandler()
 
