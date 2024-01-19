@@ -99,6 +99,7 @@ func (h *Handler) renderContent(feeds feed.FeedSites[int64]) string {
 
 	headContent := elem.Head(nil,
 		// elem.Script(attrs.Props{attrs.Src: "https://unpkg.com/htmx.org"}),
+		elem.Meta(attrs.Props{attrs.HTTPequiv: "Content-Type", attrs.Content: "text/html", attrs.Charset: "utf-8"}),
 		elem.TextNode(script),
 		elem.TextNode(style),
 	)
