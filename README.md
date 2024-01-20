@@ -29,7 +29,8 @@ k8sworker2.edison.net   Ready    <none>          251d   v1.27.1
 
 ### Cronjob
 
-The Cronjob is containerized and managed in Kubernetes.   
+The Cronjob crawls the news feed.  It invokes gRPC to get the list of websites, then it downloads and stores the content  
+by invoking gRPC.  The process runs concurrently.  It is containerized and managed in Kubernetes.   
 Link to [source code](https://github.com/elumbantoruan/feed/tree/main/cmd/cronjob).
 
 ```
@@ -40,7 +41,7 @@ newsfeed-cronjob   */5 * * * *   False     0        3m44s           6h41m
 
 ### gRPC
 
-The gRPC is containerized and managed in Kubernetes.  
+The gRPC provides a data service operation for MySQL.  It is containerized and managed in Kubernetes.  
 Link to [source code](https://github.com/elumbantoruan/feed/tree/main/cmd/grpc/server).
 ```
 kubectl get services newsfeed-grpc
@@ -50,7 +51,7 @@ newsfeed-grpc   NodePort   10.102.73.165   <none>        9000:30008/TCP   13h
 
 ### Web UI
 
-The web UI is containerized and managed in Kubernetes.  
+The web UI displays the most recent news feed. It invokes gRPC to get data.  It is containerized and managed in Kubernetes.  
 Link to [source code](https://github.com/elumbantoruan/feed/tree/main/cmd/web).
 ```
 kubectl get services newsfeed-web
