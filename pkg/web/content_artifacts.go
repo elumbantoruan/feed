@@ -49,6 +49,10 @@ body {font-family: "Lato", sans-serif;}
 .tab button.active {
   background-color: #ccc;
 }
+
+.hide {
+	display: none;
+}
 </style>
 `
 
@@ -68,10 +72,9 @@ function openContent(evt, siteName) {
   evt.currentTarget.className += " active";
 }
 
-// Get the element with id="defaultOpen" and click on it
-// document.getElementById("defaultOpen").click();
-// window.onload = function() {
-//	alert("onload");
-// }
+function showHideRow(row) { 
+	$("#" + row).toggle(); 
+} 
+
 </script>
 `

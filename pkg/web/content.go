@@ -55,7 +55,20 @@ func (h *Handler) createContent(data feed.FeedSite[int64]) elem.Node {
 
 	var container = elem.Div(attrs.Props{attrs.ID: data.Site.Site, attrs.Class: "tabcontent"})
 
-	for _, article := range data.Articles {
+	expandCollapse := func(action string, containerID string) map[string]string {
+		script := fmt.Sprintf("showHideRow('%s')", containerID)
+
+		props := map[string]string{
+			action: script,
+		}
+		if action == "ondblclick" {
+			props["class"] = "hide"
+			props["id"] = containerID
+		}
+		return props
+	}
+
+	for i, article := range data.Articles {
 		var title, published, desc1, desc2 *elem.Element
 		title = elem.P(attrs.Props{attrs.Style: termStyle.ToInline()}, elem.A(attrs.Props{attrs.Href: article.Link, attrs.Target: "_blank"}, elem.Text(clean(article.Title))))
 
@@ -66,15 +79,22 @@ func (h *Handler) createContent(data feed.FeedSite[int64]) elem.Node {
 		if article.Title != article.Description {
 			desc1 = elem.P(nil, elem.Text(clean(article.Description)))
 		}
+		contID := fmt.Sprintf("contS%dC%d", data.Site.ID, i)
+
 		if article.Description != article.Content {
-			desc2 = elem.P(nil, elem.Text(clean(article.Content)))
-			_ = desc2
+			desc2 = elem.Div(expandCollapse("ondblclick", contID), elem.Text(clean(article.Content)))
 		}
 
 		container.Children = append(container.Children, title)
 		container.Children = append(container.Children, published)
 		if desc1 != nil {
 			container.Children = append(container.Children, desc1)
+		}
+		if desc2 != nil {
+			expander := elem.Label(expandCollapse("onclick", contID), elem.Text("   &#8595"))
+			published.Children = append(published.Children, expander)
+			// container.Children = append(container.Children, expander)
+			container.Children = append(container.Children, desc2)
 		}
 	}
 	return container
@@ -100,6 +120,7 @@ func (h *Handler) renderContent(feeds feed.FeedSites[int64]) string {
 	headContent := elem.Head(nil,
 		// elem.Script(attrs.Props{attrs.Src: "https://unpkg.com/htmx.org"}),
 		elem.Meta(attrs.Props{attrs.HTTPequiv: "Content-Type", attrs.Content: "text/html", attrs.Charset: "utf-8"}),
+		elem.Script(attrs.Props{attrs.Src: "https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"}),
 		elem.TextNode(script),
 		elem.TextNode(style),
 	)
