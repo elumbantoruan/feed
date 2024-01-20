@@ -53,6 +53,10 @@ body {font-family: "Lato", sans-serif;}
 .hide {
 	display: none;
 }
+
+.pointer {
+	cursor: pointer;
+}
 </style>
 `
 

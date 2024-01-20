@@ -61,7 +61,9 @@ func (h *Handler) createContent(data feed.FeedSite[int64]) elem.Node {
 		props := map[string]string{
 			action: script,
 		}
-		if action == "ondblclick" {
+		if action == "onclick" {
+			props["class"] = "pointer"
+		} else if action == "ondblclick" {
 			props["class"] = "hide"
 			props["id"] = containerID
 		}
