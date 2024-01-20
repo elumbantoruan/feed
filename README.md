@@ -1,11 +1,11 @@
 # feed
 News crawler
 
-## Need
+## Description
 
 Feed is a news crawler.  The crawler downloads content from several RSS websites such as The Verge, Wired, Mashable, etc.  The crawler is triggered by CronJob, which makes gRPC call to store the content into MySQL database.  A very simple web UI displays the latest aggregated news feed.  The CronJob, Web UI and gRPC are containerized and its workload is managed in Kubernetes.  
 
-I use this news crawler to aggregate news content into my desire format.  It also allows me to archieve the data.  The infrastructure components such as Kubernetes and MySQL are hosted in my homelab, with the exception of Docker hub.
+The infrastructure components such as Kubernetes and MySQL are hosted in my homelab, with the exception of Docker hub.
 
 ## Infrastructure
 
@@ -58,7 +58,7 @@ NAME           TYPE       CLUSTER-IP     EXTERNAL-IP   PORT(S)          AGE
 newsfeed-web   NodePort   10.101.3.164   <none>        5000:30010/TCP   35h
 ```
 
-![WebUI](artifact/webui1.png)
+![WebUI](artifact/webui.png)
 
 ### pods
 ```
