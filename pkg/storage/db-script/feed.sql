@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS feed_site (
     site_url 	    VARCHAR(256)    NULL,
     type 	        VARCHAR(8) 		NOT NULL,
     updated         DATETIME        NULL,
-    articles_hash   VARCHAR(512),
+    articles_hash   VARCHAR(512)    NOT NULL,
     PRIMARY KEY (id)
 )ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
 
