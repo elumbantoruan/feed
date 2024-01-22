@@ -6,4 +6,4 @@ INSERT INTO feed_site (name, url, site_url, type, articles_hash) VALUES ('Gizmod
 INSERT INTO feed_site (name, url, site_url, type, articles_hash) VALUES ('Engadget','https://www.engadget.com/rss.xml','https://www.engadget.com', 'rss','');
 INSERT INTO feed_site (name, url, site_url, type, articles_hash) VALUES ('ReadWrite','https://readwrite.com/feed/','https://readwrite.com', 'rss','');
 INSERT INTO feed_site (name, url, site_url, type, articles_hash) VALUES ('Wired - All Posts','https://www.wired.com/feed/rss','https://www.wired.com', 'rss','');
-INSERT INTO feed_site (name, url, site_url, type, articles_hash) VALUES ('TechCrunch', 'https://techcrunch.com/feed/', 'rss','')
+INSERT INTO feed_site (name, url, site_url, type, articles_hash) VALUES ('TechCrunch', 'https://techcrunch.com/feed/','https://www.techcrunch.com', 'rss','')
