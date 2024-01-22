@@ -7,13 +7,10 @@ import (
 )
 
 type RssCrawler struct {
-	URL string
 }
 
-func NewRssCrawler(url string) *RssCrawler {
-	return &RssCrawler{
-		URL: url,
-	}
+func NewRssCrawler() *RssCrawler {
+	return &RssCrawler{}
 }
 
 func (rc *RssCrawler) Download(url string) (*feed.FeedSite[int64], error) {
@@ -31,7 +28,7 @@ func (rc *RssCrawler) ConvertToFeed(r *feed.Rss) (*feed.FeedSite[int64], error) 
 		recentItemPubDate = r.Channel.Item[0].PubDate
 	}
 
-	pubDate, err := parseDateTime(recentItemPubDate)
+	pubDate, err := ParseDateTime(recentItemPubDate)
 	if err != nil {
 		return nil, err
 	}
@@ -44,7 +41,7 @@ func (rc *RssCrawler) ConvertToFeed(r *feed.Rss) (*feed.FeedSite[int64], error) 
 		},
 	}
 	for _, item := range r.Channel.Item {
-		published, err := parseDateTime(item.PubDate)
+		published, err := ParseDateTime(item.PubDate)
 
 		if err != nil {
 			return nil, err

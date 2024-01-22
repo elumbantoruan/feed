@@ -10,11 +10,11 @@ import (
 	"github.com/elumbantoruan/feed/pkg/feed"
 )
 
-func CrawlerFactory(site feed.Site[int64]) Crawler[int64] {
+func Factory(site feed.Site[int64]) Crawler[int64] {
 	if site.Type == "atom" {
-		return NewAtomCrawler(site.RSS)
+		return NewAtomCrawler()
 	}
-	return NewRssCrawler(site.RSS)
+	return NewRssCrawler()
 }
 
 type Crawler[T any] interface {
@@ -64,7 +64,7 @@ func downloader(url string) ([]byte, error) {
 	return data, nil
 }
 
-func parseDateTime(dateTime string) (time.Time, error) {
+func ParseDateTime(dateTime string) (time.Time, error) {
 	layouts := []string{
 		time.RFC1123,
 		time.RFC1123Z,

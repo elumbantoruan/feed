@@ -7,13 +7,10 @@ import (
 )
 
 type AtomCrawler struct {
-	URL string
 }
 
-func NewAtomCrawler(url string) *AtomCrawler {
-	return &AtomCrawler{
-		URL: url,
-	}
+func NewAtomCrawler() *AtomCrawler {
+	return &AtomCrawler{}
 }
 
 func (ac *AtomCrawler) Download(url string) (*feed.FeedSite[int64], error) {
@@ -25,7 +22,7 @@ func (ac *AtomCrawler) Download(url string) (*feed.FeedSite[int64], error) {
 }
 
 func (ac *AtomCrawler) ConvertToFeed(a *feed.Atom) (*feed.FeedSite[int64], error) {
-	updated, err := parseDateTime(a.Updated)
+	updated, err := ParseDateTime(a.Updated)
 	if err != nil {
 		return nil, err
 	}
@@ -40,11 +37,11 @@ func (ac *AtomCrawler) ConvertToFeed(a *feed.Atom) (*feed.FeedSite[int64], error
 	}
 
 	for _, entry := range a.Entry {
-		published, err := parseDateTime(entry.Published)
+		published, err := ParseDateTime(entry.Published)
 		if err != nil {
 			fmt.Println(err)
 		}
-		updated, err := parseDateTime(entry.Updated)
+		updated, err := ParseDateTime(entry.Updated)
 		if err != nil {
 			fmt.Println(err)
 		}

@@ -1,58 +1,31 @@
-package workflow
+package crawler
 
 import (
-	"context"
 	"encoding/xml"
-	"log/slog"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"testing"
 
-	"github.com/elumbantoruan/feed/cmd/cronjob/mock"
-	"github.com/elumbantoruan/feed/pkg/crawler"
 	"github.com/elumbantoruan/feed/pkg/feed"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestWorkflow_Run(t *testing.T) {
+func TestRssCrawler_Download(t *testing.T) {
 	rssContent := createRSSMock()
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		data, err := xml.Marshal(rssContent)
 		assert.NoError(t, err)
 		w.Write(data)
 	}))
-
-	// for unit test, embed the URL from httptest into the context
-	// so the URL can be passed into gRPC Client in RSS field
-	// which will be used in the Crawler.Download(url)
-	ctx := context.WithValue(context.Background(), "url", srv.URL)
-
-	var storage []feed.Article
-	client := &mock.MockGRPCClient{Storage: storage}
-
-	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
-
-	work := New(client, logger)
-	res, err := work.Run(ctx)
+	rssCrawler := NewRssCrawler()
+	feedData, err := rssCrawler.Download(srv.URL)
 	assert.NoError(t, err)
 
-	// GetSites only called once
-	assert.Equal(t, 1, client.GetSitesCount)
-	// UpdateSiteFeedCount called twice
-	assert.Equal(t, 1, client.UpdateSiteFeedCount)
-	// AddArticleCount called twice
-	assert.Equal(t, 2, client.AddArticleCount)
-
-	// res is result which reflects the number of site
-	assert.Equal(t, 1, len(res))
-	// there are two articles, reflected from data provided in createRSSMock
-	assert.Equal(t, 2, res[0].Metric.NewArticles)
-
-	// asserting from mock storage
-	for i, article := range storage {
+	assert.NotNil(t, feedData)
+	assert.Len(t, feedData.Articles, 2)
+	for i, article := range feedData.Articles {
 		assert.Equal(t, article.ID, rssContent.Channel.Item[i].Guid.Text)
-		pubDate, _ := crawler.ParseDateTime(rssContent.Channel.Item[i].PubDate)
+		pubDate, _ := ParseDateTime(rssContent.Channel.Item[i].PubDate)
 
 		assert.Equal(t, article.Published, pubDate)
 		assert.Equal(t, article.Updated, pubDate)

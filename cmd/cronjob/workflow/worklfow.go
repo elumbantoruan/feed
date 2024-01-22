@@ -15,19 +15,16 @@ import (
 )
 
 type Workflow struct {
-	GRPCClient     client.GRPCFeedClient
-	Logger         *slog.Logger
-	DefaultCrawler crawler.Crawler[int64]
+	GRPCClient client.GRPCFeedClient
+	Logger     *slog.Logger
 }
 
-func New(grpcClient client.GRPCFeedClient, logger *slog.Logger, defaultCrawler ...crawler.Crawler[int64]) Workflow {
+func New(grpcClient client.GRPCFeedClient, logger *slog.Logger) Workflow {
 	workflow := Workflow{
 		GRPCClient: grpcClient,
 		Logger:     logger,
 	}
-	if len(defaultCrawler) != 0 {
-		workflow.DefaultCrawler = defaultCrawler[0]
-	}
+
 	return workflow
 }
 
@@ -88,13 +85,8 @@ func (w Workflow) Run(ctx context.Context) (Results, error) {
 
 func (w Workflow) worker(ctx context.Context, wID int, siteC <-chan feed.Site[int64], resultC chan<- Result) {
 	for site := range siteC {
-		var cr crawler.Crawler[int64]
 
-		if w.DefaultCrawler != nil {
-			cr = w.DefaultCrawler
-		} else {
-			cr = crawler.CrawlerFactory(site)
-		}
+		cr := crawler.Factory(site)
 
 		w.Logger.Info("Attempt to download", slog.String("url", site.RSS), slog.Int("worker", wID))
 
