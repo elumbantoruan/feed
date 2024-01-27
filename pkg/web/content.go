@@ -47,10 +47,8 @@ func (h *Handler) createContent(data feed.FeedSite[int64]) elem.Node {
 
 	clean := func(s string) string {
 		c := html.UnescapeString(s)
-		c = strings.ReplaceAll(c, "â€™", "'")
-		c = strings.ReplaceAll(c, `allowfullscreen=""`, "")
-		c = strings.ReplaceAll(c, "allowfullscreen", "")
-		return c
+		replacer := strings.NewReplacer("position:", "", "absolute;", "", `allowfullscreen=""`, "", "allowfullscreen", "")
+		return replacer.Replace(c)
 	}
 
 	var container = elem.Div(attrs.Props{attrs.ID: data.Site.Site, attrs.Class: "tabcontent"})

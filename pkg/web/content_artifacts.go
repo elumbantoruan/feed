@@ -23,6 +23,7 @@ body {font-family: "Lato", sans-serif;}
   border-left: none;
   width: 90%;
   height: 1000px;
+  display: none;
 }
 
 /* Style the buttons inside the tab */
