@@ -100,10 +100,11 @@ The span started from Cronjob (newsfeed-cronjob) traverses to gRPC (newsfeed-grp
 
 ### WebUI --> gRPC
 
-![Cronjob-gRPC](artifact/trace-web.png)
-
 Below is the trace from WebUI to render the list of feed sites along with the content for each feed site.  
 The span started from WebUI (newsfeed-web) traversed to gRPC (newsfeed-grpc) to get the list of feed sites (GetSites), and the content of each feed site (GetArticlesWithSite)
+
+![Cronjob-gRPC](artifact/trace-web.png)
+
 
 ## Components Diagram
 
