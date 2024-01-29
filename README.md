@@ -4,14 +4,15 @@ News crawler
 ## Description
 
 Feed is a news crawler.  The crawler downloads content from several RSS websites such as The Verge, Wired, Mashable, etc.  The crawler is triggered by CronJob, which makes gRPC call to store the content into MySQL database.  A very simple web UI displays the latest aggregated news feed.  The CronJob, Web UI and gRPC are containerized and its workload is managed in Kubernetes.  
+Telemetry is implemented using Open Telemetry with Honeycomb as Telemetry Provider.
 
 The infrastructure components such as Kubernetes and MySQL are hosted in my homelab, with the exception of Docker hub.
 
 ## Infrastructure
 
-### Kubernetes homelab
+### Kubernetes
 
-I use [kubeadm](https://kubernetes.io/docs/reference/setup-tools/kubeadm/) to setup a Kubernetest cluster with master node and two worker nodes.
+I use [kubeadm](https://kubernetes.io/docs/reference/setup-tools/kubeadm/) to setup a Kubernetest cluster with master node and two worker nodes at my homelab.
 
 ```
 kubectl top nodes
@@ -27,41 +28,28 @@ k8sworker1.edison.net   Ready    <none>          251d   v1.27.1
 k8sworker2.edison.net   Ready    <none>          251d   v1.27.1
 ```
 
-### Cronjob
-
-The Cronjob crawls the news feed.  It invokes gRPC to get the list of websites, then it downloads and stores the content  
-by invoking gRPC.  The process runs concurrently.  It is containerized and managed in Kubernetes.   
-Link to [source code](https://github.com/elumbantoruan/feed/tree/main/cmd/cronjob).
-
+#### Cronjob
 ```
 kubectl get cronjobs
 NAME               SCHEDULE      SUSPEND   ACTIVE   LAST SCHEDULE   AGE
 newsfeed-cronjob   */5 * * * *   False     0        3m44s           6h41m
 ```
 
-### gRPC
-
-The gRPC provides a data service operation for MySQL.  It is containerized and managed in Kubernetes.  
-Link to [source code](https://github.com/elumbantoruan/feed/tree/main/cmd/grpc/server).
+#### gRPC
 ```
 kubectl get services newsfeed-grpc
 NAME            TYPE       CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE
 newsfeed-grpc   NodePort   10.102.73.165   <none>        9000:30008/TCP   13h
 ```
 
-### Web UI
-
-The web UI displays the most recent news feed. It invokes gRPC to get data.  It is containerized and managed in Kubernetes.  
-Link to [source code](https://github.com/elumbantoruan/feed/tree/main/cmd/web).
+#### Web UI
 ```
 kubectl get services newsfeed-web
 NAME           TYPE       CLUSTER-IP     EXTERNAL-IP   PORT(S)          AGE
 newsfeed-web   NodePort   10.101.3.164   <none>        5000:30010/TCP   35h
 ```
 
-![WebUI](artifact/webui.png)
-
-### pods
+#### pods
 ```
 kubectl get pods
 NAME                              READY   STATUS      RESTARTS   AGE
@@ -82,6 +70,43 @@ Link to [database schema](https://github.com/elumbantoruan/feed/tree/main/pkg/st
 ### Docker hub
 Link to [docker hub](https://hub.docker.com/repositories/edisonlt) for CronJob, Web UI and gRPC repositories.
 
+## Services
+
+### Cronjob service  
+
+The Cronjob crawls the news feed.  It invokes gRPC to get the list of websites, then it downloads and stores the content  
+by invoking gRPC.  The process runs concurrently.  It is containerized and managed in Kubernetes.   
+Link to [source code](https://github.com/elumbantoruan/feed/tree/main/cmd/cronjob).
+
+### gRPC service  
+
+The gRPC provides a data service operation for MySQL.  It is containerized and managed in Kubernetes.  
+Link to [source code](https://github.com/elumbantoruan/feed/tree/main/cmd/grpc/server).
+
+### Web UI service  
+
+The web UI displays the most recent news feed. It invokes gRPC to get data.  It is containerized and managed in Kubernetes.  
+Link to [source code](https://github.com/elumbantoruan/feed/tree/main/cmd/web).
+
+![WebUI](artifact/webui.png)
+
+## Telemetry
+
+### Cronjob --> gRPC
+
+Below is the trace from Cronjob which creates multiple Workflow worker to download the content concurrently.  
+The span started from Cronjob (newsfeed-cronjob) traverses to gRPC (newsfeed-grpc) to get the list of feed sites (GetSites)
+![Cronjob-gRPC](artifact/trace-cronjob.png)
+
+### WebUI --> gRPC
+
+![Cronjob-gRPC](artifact/trace-web.png)
+
+Below is the trace from WebUI to render the list of feed sites along with the content for each feed site.  
+The span started from WebUI (newsfeed-web) traversed to gRPC (newsfeed-grpc) to get the list of feed sites (GetSites), and the content of each feed site (GetArticlesWithSite)
+
 ## Components Diagram
+
+Below is the components diagram, where Cronjob and WebUI utilize gRPC as a data service to store and get data from MySQL
 
 ![Component](artifact/feed.jpg)

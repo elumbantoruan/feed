@@ -1,6 +1,7 @@
 package crawler
 
 import (
+	"context"
 	"encoding/xml"
 	"net/http"
 	"net/http/httptest"
@@ -18,7 +19,7 @@ func TestAtomCrawler_Download(t *testing.T) {
 		w.Write(data)
 	}))
 	atomCrawler := NewAtomCrawler()
-	feedData, err := atomCrawler.Download(srv.URL)
+	feedData, err := atomCrawler.Download(context.Background(), srv.URL)
 	assert.NoError(t, err)
 
 	assert.NotNil(t, feedData)

@@ -1,9 +1,11 @@
 package crawler
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/elumbantoruan/feed/pkg/feed"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type AtomCrawler struct {
@@ -13,7 +15,10 @@ func NewAtomCrawler() *AtomCrawler {
 	return &AtomCrawler{}
 }
 
-func (ac *AtomCrawler) Download(url string) (*feed.FeedSite[int64], error) {
+func (ac *AtomCrawler) Download(ctx context.Context, url string) (*feed.FeedSite[int64], error) {
+	span := trace.SpanFromContext(ctx)
+	span.AddEvent("Download Atom feed " + url)
+
 	atom, err := download[feed.Atom](url)
 	if err != nil {
 		return nil, err

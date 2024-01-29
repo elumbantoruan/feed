@@ -7,6 +7,7 @@ type: Opaque
 data:
   DB_CONN: ${DB_CONN}
   DISCORD_WEBHOOK: ${DISCORD_WEBHOOK}
+  HONEYCOMB_API_KEY: ${HONEYCOMB_API_KEY}
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -15,6 +16,7 @@ metadata:
   namespace: newsfeed
 data:
   GRPC_SERVER_ADDRESS: 192.168.1.7:30008
+  OTEL_SERVICE_NAME: "newsfeed-cronjob"
 ---
 apiVersion: batch/v1
 kind: CronJob
@@ -49,9 +51,19 @@ spec:
                 secretKeyRef:
                   name: cronsecret
                   key: DISCORD_WEBHOOK
+            - name: HONEYCOMB_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: cronsecret
+                  key: HONEYCOMB_API_KEY
             - name: GRPC_SERVER_ADDRESS
               valueFrom:
                 configMapKeyRef:
                   name: cronconfigmap
                   key: GRPC_SERVER_ADDRESS
+            - name: OTEL_SERVICE_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: cronconfigmap
+                  key: OTEL_SERVICE_NAME
           restartPolicy: OnFailure

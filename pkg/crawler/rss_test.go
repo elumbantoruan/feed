@@ -1,6 +1,7 @@
 package crawler
 
 import (
+	"context"
 	"encoding/xml"
 	"net/http"
 	"net/http/httptest"
@@ -18,7 +19,7 @@ func TestRssCrawler_Download(t *testing.T) {
 		w.Write(data)
 	}))
 	rssCrawler := NewRssCrawler()
-	feedData, err := rssCrawler.Download(srv.URL)
+	feedData, err := rssCrawler.Download(context.Background(), srv.URL)
 	assert.NoError(t, err)
 
 	assert.NotNil(t, feedData)

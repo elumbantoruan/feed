@@ -11,7 +11,7 @@ RUN go mod download
 
 COPY . .
 
-RUN go build -o /app/feedgrpc ./cmd/grpc/server
+RUN go build -o /app/feedgrpc ./cmd/grpc
 
 FROM alpine
 RUN apk add --no-cache ca-certificates && update-ca-certificates

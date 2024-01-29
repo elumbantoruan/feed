@@ -1,9 +1,11 @@
 package crawler
 
 import (
+	"context"
 	"strings"
 
 	"github.com/elumbantoruan/feed/pkg/feed"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type RssCrawler struct {
@@ -13,7 +15,10 @@ func NewRssCrawler() *RssCrawler {
 	return &RssCrawler{}
 }
 
-func (rc *RssCrawler) Download(url string) (*feed.FeedSite[int64], error) {
+func (rc *RssCrawler) Download(ctx context.Context, url string) (*feed.FeedSite[int64], error) {
+	span := trace.SpanFromContext(ctx)
+	span.AddEvent("Download RSS feed " + url)
+
 	rss, err := download[feed.Rss](url)
 	if err != nil {
 		return nil, err

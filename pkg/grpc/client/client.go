@@ -7,6 +7,7 @@ import (
 
 	"github.com/elumbantoruan/feed/pkg/feed"
 	pb "github.com/elumbantoruan/feed/pkg/feedproto"
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -29,7 +30,10 @@ type GRPCFeedClient interface {
 
 func NewGRPCClient(serverAddr string) (*grpcFeedClient, error) {
 
-	conn, err := grpc.Dial(serverAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.Dial(serverAddr,
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithStatsHandler(otelgrpc.NewClientHandler()),
+	)
 	if err != nil {
 		return nil, fmt.Errorf("error grpc connect: %w", err)
 	}

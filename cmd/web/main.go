@@ -14,6 +14,9 @@ import (
 	"github.com/elumbantoruan/feed/pkg/web/storage"
 	"github.com/gofiber/fiber/v2"
 	"github.com/heptiolabs/healthcheck"
+	"github.com/honeycombio/honeycomb-opentelemetry-go"
+	"github.com/honeycombio/otel-config-go/otelconfig"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 func main() {
@@ -30,6 +33,21 @@ func main() {
 	}
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	webstorage := storage.NewWebStorage(grpcClient)
+
+	dsp := honeycomb.NewDynamicAttributeSpanProcessor(func() []attribute.KeyValue {
+		return []attribute.KeyValue{}
+	})
+	bsp := honeycomb.NewBaggageSpanProcessor()
+
+	shutdown, err := otelconfig.ConfigureOpenTelemetry(
+		otelconfig.WithSpanProcessor(dsp, bsp),
+	)
+	if err != nil {
+		logger.Error("main - failed from ConfigurationOpenTelemetry", slog.Any("error", err))
+		os.Exit(1)
+	}
+
+	defer shutdown()
 
 	// Web handler
 	var handler = web.NewContent(webstorage, logger)

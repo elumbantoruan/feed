@@ -1,6 +1,7 @@
 package crawler
 
 import (
+	"context"
 	"encoding/xml"
 	"fmt"
 	"io"
@@ -18,7 +19,7 @@ func Factory(site feed.Site[int64]) Crawler[int64] {
 }
 
 type Crawler[T any] interface {
-	Download(url string) (*feed.FeedSite[T], error)
+	Download(ctx context.Context, url string) (*feed.FeedSite[T], error)
 }
 
 type Content interface {

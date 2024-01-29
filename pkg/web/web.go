@@ -9,6 +9,7 @@ import (
 
 	"github.com/elumbantoruan/feed/pkg/feed"
 	"github.com/elumbantoruan/feed/pkg/web/storage"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/chasefleming/elem-go"
 	"github.com/chasefleming/elem-go/attrs"
@@ -22,6 +23,7 @@ var title = "News Feed"
 type Handler struct {
 	webStorage *storage.WebStorage
 	logger     *slog.Logger
+	tracer     trace.Tracer
 	firstTab   bool
 }
 

@@ -10,6 +10,10 @@ import (
 	"github.com/elumbantoruan/feed/pkg/crawler"
 	"github.com/elumbantoruan/feed/pkg/feed"
 	"github.com/elumbantoruan/feed/pkg/grpc/client"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 
 	"log/slog"
 )
@@ -17,12 +21,16 @@ import (
 type Workflow struct {
 	GRPCClient client.GRPCFeedClient
 	Logger     *slog.Logger
+	Tracer     trace.Tracer
 }
 
 func New(grpcClient client.GRPCFeedClient, logger *slog.Logger) Workflow {
+	tracer := otel.Tracer("newsfeed-cronjob")
+
 	workflow := Workflow{
 		GRPCClient: grpcClient,
 		Logger:     logger,
+		Tracer:     tracer,
 	}
 
 	return workflow
@@ -44,6 +52,10 @@ type Metric struct {
 }
 
 func (w Workflow) Run(ctx context.Context) (Results, error) {
+
+	ctx, rootSpan := w.Tracer.Start(ctx, "Workflow-Run")
+	defer rootSpan.End()
+
 	sites, err := w.GRPCClient.GetSites(ctx)
 	if err != nil {
 		w.Logger.Error("Run", slog.Any("error", err))
@@ -69,16 +81,25 @@ func (w Workflow) Run(ctx context.Context) (Results, error) {
 
 	close(siteC)
 
+	var anyError bool
+
 	var results Results
 	for i := 0; i < jobs; i++ {
 		result := <-resultC
 		if result.Error != nil {
 			w.Logger.Error("Result", slog.Any("error", result.Error))
+			anyError = true
 		}
 		results = append(results, result)
 	}
 
 	close(resultC)
+
+	if anyError {
+		rootSpan.SetStatus(codes.Error, "Workflow-Run completed with error. Check the log")
+	} else {
+		rootSpan.SetStatus(codes.Ok, "Workflow-Run completed successfully")
+	}
 
 	return results, nil
 }
@@ -90,7 +111,12 @@ func (w Workflow) worker(ctx context.Context, wID int, siteC <-chan feed.Site[in
 
 		w.Logger.Info("Attempt to download", slog.String("url", site.RSS), slog.Int("worker", wID))
 
-		f, err := cr.Download(site.RSS)
+		ctx, span := w.Tracer.Start(ctx, "Workflow-worker",
+			trace.WithAttributes(attribute.Int("workerID", wID)),
+		)
+		defer span.End()
+
+		f, err := cr.Download(ctx, site.RSS)
 		if err != nil {
 			w.Logger.Error("Run - Download", slog.Any("error", err))
 			resultC <- Result{WorkerID: wID, Metric: Metric{Site: site.Site}, Error: err}
@@ -100,7 +126,7 @@ func (w Workflow) worker(ctx context.Context, wID int, siteC <-chan feed.Site[in
 
 		articlesHash := computeHash(f.Articles)
 
-		if articlesHash == site.ArticlesHash { // f.Updated.Equal(*site.Updated) {
+		if articlesHash == site.ArticlesHash {
 			// no update
 			resultC <- Result{WorkerID: wID, Metric: Metric{Site: site.Site}, Error: nil}
 			return

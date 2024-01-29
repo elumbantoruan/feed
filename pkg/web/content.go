@@ -9,6 +9,7 @@ import (
 
 	"github.com/elumbantoruan/feed/pkg/feed"
 	"github.com/elumbantoruan/feed/pkg/web/storage"
+	"go.opentelemetry.io/otel"
 
 	"github.com/chasefleming/elem-go"
 	"github.com/chasefleming/elem-go/attrs"
@@ -17,15 +18,21 @@ import (
 )
 
 func NewContent(webStorage *storage.WebStorage, logger *slog.Logger) *Handler {
+	tracer := otel.Tracer("newsfeed-web")
+
 	return &Handler{
 		webStorage: webStorage,
 		logger:     logger,
+		tracer:     tracer,
 	}
 }
 
 func (h *Handler) RenderContentRoute(c *fiber.Ctx) error {
 	c.Type("html")
 	ctx := context.Background()
+	ctx, span := h.tracer.Start(ctx, "FeedService.AddSiteFeed")
+	defer span.End()
+
 	feeds, err := h.webStorage.GetArticles(ctx)
 	if err != nil {
 		return err
