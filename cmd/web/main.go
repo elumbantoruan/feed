@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"log/slog"
@@ -10,17 +11,14 @@ import (
 
 	"github.com/elumbantoruan/feed/cmd/web/config"
 	"github.com/elumbantoruan/feed/pkg/grpc/client"
+	"github.com/elumbantoruan/feed/pkg/otelsetup"
 	"github.com/elumbantoruan/feed/pkg/web"
 	"github.com/elumbantoruan/feed/pkg/web/storage"
-	"github.com/gofiber/fiber/v2"
 	"github.com/heptiolabs/healthcheck"
-	"github.com/honeycombio/honeycomb-opentelemetry-go"
-	"github.com/honeycombio/otel-config-go/otelconfig"
-	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
 func main() {
-	app := fiber.New()
 
 	// components dependency
 	cfg, err := config.New()
@@ -34,24 +32,17 @@ func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	webstorage := storage.NewWebStorage(grpcClient)
 
-	dsp := honeycomb.NewDynamicAttributeSpanProcessor(func() []attribute.KeyValue {
-		return []attribute.KeyValue{}
-	})
-	bsp := honeycomb.NewBaggageSpanProcessor()
-
-	shutdown, err := otelconfig.ConfigureOpenTelemetry(
-		otelconfig.WithSpanProcessor(dsp, bsp),
-	)
-	if err != nil {
-		logger.Error("main - failed from ConfigurationOpenTelemetry", slog.Any("error", err))
-		os.Exit(1)
-	}
-
-	defer shutdown()
+	ctx := context.Background()
+	tp := otelsetup.NewTraceProviderGrpc(ctx, cfg.OtelGRPCEndpoint)
+	defer func(ctx context.Context) {
+		tp.Shutdown(ctx)
+	}(ctx)
 
 	// Web handler
 	var handler = web.NewContent(webstorage, logger)
-	app.Get("/", handler.RenderContentRoute)
+
+	otelHandler := otelhttp.NewHandler(http.HandlerFunc(handler.RenderContent), "GET Content")
+	http.Handle("/", otelHandler)
 
 	health := healthcheck.NewHandler()
 
@@ -61,7 +52,7 @@ func main() {
 
 	logger.Info("Web UI start serving the service", slog.Time("Time", time.Now()))
 
-	if err := app.Listen(fmt.Sprintf(":%s", cfg.WebPort)); err != nil {
+	if err := http.ListenAndServe(fmt.Sprintf(":%s", cfg.WebPort), nil); err != nil {
 		logger.Error("Problem encountered serving web server", slog.Any("error", err))
 	}
 }

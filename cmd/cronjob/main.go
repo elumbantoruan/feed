@@ -10,9 +10,7 @@ import (
 	"github.com/elumbantoruan/feed/cmd/cronjob/config"
 	"github.com/elumbantoruan/feed/cmd/cronjob/workflow"
 	"github.com/elumbantoruan/feed/pkg/grpc/client"
-	"github.com/honeycombio/honeycomb-opentelemetry-go"
-	"github.com/honeycombio/otel-config-go/otelconfig"
-	"go.opentelemetry.io/otel/attribute"
+	"github.com/elumbantoruan/feed/pkg/otelsetup"
 )
 
 func main() {
@@ -33,26 +31,13 @@ func main() {
 		os.Exit(1)
 	}
 
-	dsp := honeycomb.NewDynamicAttributeSpanProcessor(func() []attribute.KeyValue {
-		return []attribute.KeyValue{
-			attribute.String("Cronjob-Timestamp", time.Now().String()),
-		}
-	})
-	bsp := honeycomb.NewBaggageSpanProcessor()
-
-	shutdown, err := otelconfig.ConfigureOpenTelemetry(
-		otelconfig.WithSpanProcessor(dsp, bsp),
-	)
-	if err != nil {
-		logger.Error("main - failed from ConfigurationOpenTelemetry", slog.Any("error", err))
-		os.Exit(1)
-	}
-
-	defer shutdown()
+	ctx := context.Background()
+	tp := otelsetup.NewTraceProviderGrpc(ctx, config.OtelGRPCEndpoint)
+	defer func(ctx context.Context) {
+		tp.Shutdown(ctx)
+	}(ctx)
 
 	workflow := workflow.New(svc, logger)
-
-	ctx := context.Background()
 
 	res, err := workflow.Run(ctx)
 	if err != nil {

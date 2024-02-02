@@ -16,6 +16,7 @@ metadata:
 data:
   GRPC_PORT: "9000"
   OTEL_SERVICE_NAME: "newsfeed-grpc"
+  OTEL_EXPORTER_OTLP_GRPC_ENDPOINT: "192.168.1.6:4317"
 ---
 apiVersion: v1
 kind: Service
@@ -77,6 +78,11 @@ spec:
             configMapKeyRef:
               name: grpcconfigmap
               key: GRPC_PORT
+        - name: OTEL_EXPORTER_OTLP_GRPC_ENDPOINT
+          valueFrom:
+            configMapKeyRef:
+              name: grpcconfigmap
+              key: OTEL_EXPORTER_OTLP_GRPC_ENDPOINT
         - name: HONEYCOMB_API_KEY
           valueFrom:
             secretKeyRef:

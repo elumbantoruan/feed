@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"net/http"
@@ -11,13 +12,10 @@ import (
 	"github.com/elumbantoruan/feed/cmd/grpc/config"
 	pb "github.com/elumbantoruan/feed/pkg/feedproto"
 	"github.com/elumbantoruan/feed/pkg/grpc/service"
-
-	"github.com/honeycombio/honeycomb-opentelemetry-go"
-	"github.com/honeycombio/otel-config-go/otelconfig"
+	"github.com/elumbantoruan/feed/pkg/otelsetup"
 
 	"github.com/elumbantoruan/feed/pkg/storage"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
-	"go.opentelemetry.io/otel/attribute"
 
 	"log/slog"
 
@@ -33,7 +31,11 @@ func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	logger.Info("main", slog.Time("start", time.Now()), slog.Int("cpu count", runtime.NumCPU()))
 
-	config, _ := config.NewConfig()
+	config, err := config.NewConfig()
+	if err != nil {
+		logger.Error("main", slog.Any("error", err))
+		os.Exit(1)
+	}
 	st, err := storage.NewMySQLStorage(config.DBConn)
 	if err != nil {
 		logger.Error("main", slog.Any("error", err))
@@ -44,20 +46,11 @@ func main() {
 
 	go http.ListenAndServe(healthCheckEndpoint, health)
 
-	dsp := honeycomb.NewDynamicAttributeSpanProcessor(func() []attribute.KeyValue {
-		return []attribute.KeyValue{}
-	})
-	bsp := honeycomb.NewBaggageSpanProcessor()
-
-	shutdown, err := otelconfig.ConfigureOpenTelemetry(
-		otelconfig.WithSpanProcessor(dsp, bsp),
-	)
-	if err != nil {
-		logger.Error("main - failed from ConfigurationOpenTelemetry", slog.Any("error", err))
-		os.Exit(1)
-	}
-
-	defer shutdown()
+	ctx := context.Background()
+	tp := otelsetup.NewTraceProviderGrpc(ctx, config.OtelGRPCEndpoint)
+	defer func(ctx context.Context) {
+		tp.Shutdown(ctx)
+	}(ctx)
 
 	address := fmt.Sprintf(":%s", config.GRPCPort)
 	lis, err := net.Listen("tcp", address)

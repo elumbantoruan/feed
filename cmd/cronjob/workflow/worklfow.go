@@ -53,7 +53,7 @@ type Metric struct {
 
 func (w Workflow) Run(ctx context.Context) (Results, error) {
 
-	ctx, rootSpan := w.Tracer.Start(ctx, "Workflow-Run")
+	ctx, rootSpan := w.Tracer.Start(ctx, "Workflow.Run", trace.WithSpanKind(trace.SpanKindClient))
 	defer rootSpan.End()
 
 	sites, err := w.GRPCClient.GetSites(ctx)

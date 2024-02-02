@@ -1,21 +1,31 @@
 package web
 
 import (
-	"context"
 	"fmt"
 	"html"
 	"log/slog"
+	"net/http"
 	"strings"
 
 	"github.com/elumbantoruan/feed/pkg/feed"
 	"github.com/elumbantoruan/feed/pkg/web/storage"
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/chasefleming/elem-go"
 	"github.com/chasefleming/elem-go/attrs"
 	"github.com/chasefleming/elem-go/styles"
-	"github.com/gofiber/fiber/v2"
 )
+
+var title = "News Feed"
+
+type Handler struct {
+	webStorage *storage.WebStorage
+	logger     *slog.Logger
+	tracer     trace.Tracer
+	firstTab   bool
+}
 
 func NewContent(webStorage *storage.WebStorage, logger *slog.Logger) *Handler {
 	tracer := otel.Tracer("newsfeed-web")
@@ -27,17 +37,24 @@ func NewContent(webStorage *storage.WebStorage, logger *slog.Logger) *Handler {
 	}
 }
 
-func (h *Handler) RenderContentRoute(c *fiber.Ctx) error {
-	c.Type("html")
-	ctx := context.Background()
-	ctx, span := h.tracer.Start(ctx, "FeedService.AddSiteFeed")
+func (h *Handler) RenderContent(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	ctx, span := h.tracer.Start(ctx, "Web.RenderContent", trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
+
+	h.logger.Info("RenderContent", slog.String("traceId", span.SpanContext().TraceID().String()))
 
 	feeds, err := h.webStorage.GetArticles(ctx)
 	if err != nil {
-		return err
+		w.WriteHeader(http.StatusInternalServerError)
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+		return
 	}
-	return c.SendString(h.renderContent(feeds))
+	w.WriteHeader(http.StatusOK)
+	span.SetStatus(codes.Ok, "")
+	w.Write([]byte(h.renderContent(feeds)))
 }
 
 func (h *Handler) createContent(data feed.FeedSite[int64]) elem.Node {

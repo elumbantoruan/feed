@@ -4,9 +4,9 @@ News crawler
 ## Description
 
 Feed is a news crawler.  The crawler downloads content from several RSS websites such as The Verge, Wired, Mashable, etc.  The crawler is triggered by CronJob, which makes gRPC call to store the content into MySQL database.  A very simple web UI displays the latest aggregated news feed.  The CronJob, Web UI and gRPC are containerized and its workload is managed in Kubernetes.  
-Telemetry is implemented using Open Telemetry with Honeycomb as Telemetry Provider.
+Telemetry is implemented using Open Telemetry with Grafana Tempo as Telemetry Provider.
 
-The infrastructure components such as Kubernetes and MySQL are hosted in my homelab, with the exception of Docker hub.
+The infrastructure components such as Kubernetes, Grafana and MySQL are hosted in my homelab, with the exception of Docker hub.
 
 ## Infrastructure
 
@@ -95,15 +95,21 @@ Link to [source code](https://github.com/elumbantoruan/feed/tree/main/cmd/web).
 ### Cronjob --> gRPC
 
 Below is the trace from Cronjob which creates multiple Workflow worker to download the content concurrently.  
-The span started from Cronjob (newsfeed-cronjob) traverses to gRPC (newsfeed-grpc) to get the list of feed sites (GetSites)
-![Cronjob-gRPC](artifact/trace-cronjob.png)
+The span started from Cronjob (newsfeed-cronjob) traverses to gRPC (newsfeed-grpc) to get the list of feed sites (GetSites) and it's ended with the child span represents MySQL
+![Cronjob-gRPC](artifact/trace-cronjob-tempo.png)
 
 ### WebUI --> gRPC
 
 Below is the trace from WebUI to render the list of feed sites along with the content for each feed site.  
-The span started from WebUI (newsfeed-web) traversed to gRPC (newsfeed-grpc) to get the list of feed sites (GetSites), and the content of each feed site (GetArticlesWithSite)
+The span started from WebUI (newsfeed-web) traversed to gRPC (newsfeed-grpc) to get the list of feed sites (GetSites), and the content of each feed site (GetArticlesWithSite) and it's ended with the child span represents MySQL.
 
-![Cronjob-gRPC](artifact/trace-web.png)
+![Cronjob-gRPC](artifact/trace-web-tempo.png)
+
+### Service Map
+
+Below is the service map that represent the relational and dependency of the entire systems including Cronjob, Web UI, gRPC, and MySQL
+
+![ServiceMap](artifact/service-map.png)
 
 
 ## Components Diagram
