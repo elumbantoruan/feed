@@ -1,4 +1,5 @@
 # feed
+
 News crawler
 
 ## Description
@@ -14,7 +15,7 @@ The infrastructure components such as Kubernetes, Grafana and MySQL are hosted i
 
 I use [kubeadm](https://kubernetes.io/docs/reference/setup-tools/kubeadm/) to setup a Kubernetest cluster with master node and two worker nodes at my homelab.
 
-```
+``` text
 kubectl top nodes
 NAME                    CPU(cores)   CPU%   MEMORY(bytes)   MEMORY%
 k8smaster.edison.net    339m         2%     20483Mi         64%
@@ -29,28 +30,32 @@ k8sworker2.edison.net   Ready    <none>          251d   v1.27.1
 ```
 
 #### Cronjob
-```
+
+``` text
 kubectl get cronjobs
 NAME               SCHEDULE      SUSPEND   ACTIVE   LAST SCHEDULE   AGE
 newsfeed-cronjob   */5 * * * *   False     0        3m44s           6h41m
 ```
 
 #### gRPC
-```
+
+``` text
 kubectl get services newsfeed-grpc
 NAME            TYPE       CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE
 newsfeed-grpc   NodePort   10.102.73.165   <none>        9000:30008/TCP   13h
 ```
 
 #### Web UI
-```
+
+``` text
 kubectl get services newsfeed-web
 NAME           TYPE       CLUSTER-IP     EXTERNAL-IP   PORT(S)          AGE
 newsfeed-web   NodePort   10.101.3.164   <none>        5000:30010/TCP   35h
 ```
 
 #### pods
-```
+
+``` text
 kubectl get pods
 NAME                              READY   STATUS      RESTARTS   AGE
 newsfeed-cronjob-28421320-7jkvk   0/1     Completed   0          11m
@@ -68,6 +73,7 @@ At this point, MySQL database is not managed in Kubernetes, rather as a local in
 Link to [database schema](https://github.com/elumbantoruan/feed/tree/main/pkg/storage/db-script).
 
 ### Docker hub
+
 Link to [docker hub](https://hub.docker.com/repositories/edisonlt) for CronJob, Web UI and gRPC repositories.
 
 ## Services
@@ -113,13 +119,11 @@ Below is the service map that represent the relational and dependency of the ent
 
 ![ServiceMap](artifact/images/service-map.png)
 
-
 ### Logs
 
 Below is the logs stored in Grafana Loki
 
 ![Logs](artifact/images/logs.png)
-
 
 ## Components Diagram
 
