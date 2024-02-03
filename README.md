@@ -81,7 +81,7 @@ Link to [docker hub](https://hub.docker.com/repositories/edisonlt) for CronJob, 
 ### Cronjob service  
 
 The Cronjob crawls the news feed to download the content.  It invokes gRPC to get the list of websites and stores the content.  
-The process runs concurrently.  It is containerized and managed in Kubernetes.   
+The process runs concurrently.  It is containerized and managed in Kubernetes.  
 Link to [source code](https://github.com/elumbantoruan/feed/tree/main/cmd/cronjob).
 
 ### gRPC service  
