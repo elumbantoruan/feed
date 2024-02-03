@@ -25,7 +25,7 @@ metadata:
   name: newsfeed-cronjob
   namespace: newsfeed
 spec:
-  schedule: "*/5 * * * *"
+  schedule: "*/15 * * * *"
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 3
   failedJobsHistoryLimit: 1

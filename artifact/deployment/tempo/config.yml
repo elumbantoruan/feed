@@ -1,0 +1,56 @@
+server:
+  http_listen_port: 3200
+
+query_frontend:
+  search:
+    duration_slo: 5s
+    throughput_bytes_slo: 1.073741824e+09
+  trace_by_id:
+    duration_slo: 5s
+
+distributor:
+  receivers:                           # this configuration will listen on all ports and protocols that tempo is capable of.
+    otlp:
+      protocols:
+        http:
+        grpc:
+
+ingester:
+  max_block_duration: 5m               # cut the headblock when this much time passes. this is being set for demo purposes and should probably be left alone normally
+
+compactor:
+  compaction:
+    block_retention: 48h                # overall Tempo trace retention. set for demo purposes
+
+metrics_generator:
+  processor:
+    service_graphs:
+      wait: 10s
+  registry:
+    external_labels:
+      source: tempo
+      cluster: edison.net
+  storage:
+    path: /tmp/tempo/generator/wal
+    remote_write:
+      - url: http://127.0.0.1:9090/api/v1/write
+        send_exemplars: true
+
+storage:
+  trace:
+    backend: s3                     # backend configuration to use
+    s3:
+      endpoint: 127.0.0.1:9000
+      bucket: grafana-traces-data
+      insecure: true
+      access_key: <access_key>
+      secret_key: <secret_key>
+    wal:
+      path: /tmp/tempo/wal             # where to store the the wal locally
+    local:
+      path: /tmp/tempo/blocks
+
+overrides:
+  defaults:
+    metrics_generator:
+      processors: [service-graphs, span-metrics] # enables metrics generator

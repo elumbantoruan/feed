@@ -88,32 +88,41 @@ Link to [source code](https://github.com/elumbantoruan/feed/tree/main/cmd/grpc/s
 The web UI displays the most recent news feed. It invokes gRPC to get data.  It is containerized and managed in Kubernetes.  
 Link to [source code](https://github.com/elumbantoruan/feed/tree/main/cmd/web).
 
-![WebUI](artifact/webui.png)
+![WebUI](artifact/images/webui.png)
 
-## Telemetry
+## Observability
 
-### Cronjob --> gRPC
+### Traces
+
+#### Cronjob --> gRPC
 
 Below is the trace from Cronjob which creates multiple Workflow worker to download the content concurrently.  
 The span started from Cronjob (newsfeed-cronjob) traverses to gRPC (newsfeed-grpc) to get the list of feed sites (GetSites) and it's ended with the child span represents MySQL
-![Cronjob-gRPC](artifact/trace-cronjob-tempo.png)
+![Cronjob-gRPC](artifact/images/trace-cronjob-tempo.png)
 
-### WebUI --> gRPC
+#### WebUI --> gRPC
 
 Below is the trace from WebUI to render the list of feed sites along with the content for each feed site.  
 The span started from WebUI (newsfeed-web) traversed to gRPC (newsfeed-grpc) to get the list of feed sites (GetSites), and the content of each feed site (GetArticlesWithSite) and it's ended with the child span represents MySQL.
 
-![Cronjob-gRPC](artifact/trace-web-tempo.png)
+![Cronjob-gRPC](artifact/images/trace-web-tempo.png)
 
-### Service Map
+#### Service Map
 
 Below is the service map that represent the relational and dependency of the entire systems including Cronjob, Web UI, gRPC, and MySQL
 
-![ServiceMap](artifact/service-map.png)
+![ServiceMap](artifact/images/service-map.png)
+
+
+### Logs
+
+Below is the logs stored in Grafana Loki
+
+![Logs](artifact/images/logs.png)
 
 
 ## Components Diagram
 
 Below is the components diagram, where Cronjob and WebUI utilize gRPC as a data service to store and get data from MySQL
 
-![Component](artifact/feed.jpg)
+![Component](artifact/images/feed.jpg)

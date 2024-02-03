@@ -21,13 +21,13 @@ func main() {
 
 	config, err := config.NewConfig()
 	if err != nil {
-		logger.Error("main - config", slog.Any("error", err))
+		logger.Error("cronjob - config", slog.Any("error", err))
 		os.Exit(1)
 	}
 
 	svc, err := client.NewGRPCClient(config.GRPCServerAddress)
 	if err != nil {
-		logger.Error("main - grpc client connection", slog.Any("error", err))
+		logger.Error("cronjob - grpc client connection", slog.Any("error", err))
 		os.Exit(1)
 	}
 
@@ -41,7 +41,7 @@ func main() {
 
 	res, err := workflow.Run(ctx)
 	if err != nil {
-		logger.Error("main - run worklow", slog.Any("error", err))
+		logger.Error("cronjob - run worklow", slog.Any("error", err))
 		os.Exit(1)
 	}
 
