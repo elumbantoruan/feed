@@ -102,13 +102,13 @@ Link to [source code](https://github.com/elumbantoruan/feed/tree/main/cmd/web).
 
 #### Cronjob --> gRPC
 
-Below is the trace from Cronjob which creates multiple Workflow worker to download the content concurrently.  
+The following is the trace from Cronjob which creates multiple Workflow worker to download the content concurrently.  
 The span started from Cronjob (newsfeed-cronjob) traverses to gRPC (newsfeed-grpc) to get the list of feed sites (GetSites) and it's ended with the child span represents MySQL
 ![Cronjob-gRPC](artifact/images/trace-cronjob-tempo.png)
 
 #### WebUI --> gRPC
 
-Below is the trace from WebUI to render the list of feed sites along with the content for each feed site.  
+The following is the trace from WebUI to render the list of feed sites along with the content for each feed site.  
 The span started from WebUI (newsfeed-web) traversed to gRPC (newsfeed-grpc) to get the list of feed sites (GetSites), and the content of each feed site (GetArticlesWithSite) and it's ended with the child span represents MySQL.
 
 ![Cronjob-gRPC](artifact/images/trace-web-tempo.png)
@@ -120,11 +120,18 @@ Moreover, Grafana Tempo also generate metrics from ingested traces using [metric
 
 ![ServiceGraph](artifact/images/traces-metrics.png)
 
+### Metrics
+
+The following is the metrics captured by Prometheus for WebUI request and gRPC calls.
+
+![Metrics](artifact/images/metrics-web-grpc.png)
+
 ### Logs
 
-Below is the logs stored in Grafana Loki
+The following are the logs stored in Grafana Loki.  Traces and logs can be linked together by traceID
 
 ![Logs](artifact/images/logs.png)
+![Logs](artifact/images/traces-log.png)
 
 ## Components Diagram
 

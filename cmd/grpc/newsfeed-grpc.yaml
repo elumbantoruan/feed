@@ -6,7 +6,6 @@ metadata:
 type: Opaque
 data:
   DB_CONN: ${DB_CONN}
-  HONEYCOMB_API_KEY: ${HONEYCOMB_API_KEY}
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -29,8 +28,14 @@ spec:
   type: NodePort
   ports:
   - port: 9000
+    name: grpc
     targetPort: 9000
     nodePort: 30008
+    protocol: TCP
+  - port: 9001
+    name: metrics
+    targetPort: 9001
+    nodePort: 30009
     protocol: TCP
   selector:
     app: newsfeed-grpc
@@ -83,11 +88,6 @@ spec:
             configMapKeyRef:
               name: grpcconfigmap
               key: OTEL_EXPORTER_OTLP_GRPC_ENDPOINT
-        - name: HONEYCOMB_API_KEY
-          valueFrom:
-            secretKeyRef:
-              name: grpcsecret
-              key: HONEYCOMB_API_KEY
         ports:
         - containerPort: 9000
         readinessProbe:
