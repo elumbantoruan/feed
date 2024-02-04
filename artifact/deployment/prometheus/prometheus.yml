@@ -27,6 +27,9 @@ scrape_configs:
 
     static_configs:
       - targets: ["localhost:9090"]
-  - job_name: "simple_server"
+  - job_name: "newsfeed-web"
     static_configs:
-      - targets: ["localhost:8090"]
+      - targets: ["192.168.1.7:30010"]
+  - job_name: "newsfeed-grpc"
+    static_configs:
+      - targets: ["192.168.1.7:30009"]

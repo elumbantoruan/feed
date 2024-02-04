@@ -23,6 +23,7 @@ systemd: /etc/systemd/system/prometheus.service
 Deploy into K8S cluster
 
 ## loki
+
 binary: /usr/bin/loki  
 config: /etc/loki/lokiconfig.yaml  
 systemd: /etc/systemd/system/loki.service

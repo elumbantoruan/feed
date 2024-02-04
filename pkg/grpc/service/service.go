@@ -9,7 +9,6 @@ import (
 	pb "github.com/elumbantoruan/feed/pkg/feedproto"
 	"github.com/elumbantoruan/feed/pkg/storage"
 	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
 
 	"log/slog"
@@ -23,28 +22,21 @@ type feedServiceServer struct {
 	storage storage.Storage[int64]
 	logger  *slog.Logger
 	tracer  trace.Tracer
-	counter metric.Int64Counter
 }
 
 func NewFeedServiceServer(st storage.Storage[int64], logger *slog.Logger) feedproto.FeedServiceServer {
 	tracer := otel.Tracer("newsfeed-grpc")
-	// meter := otel.Meter("newsfeed-grpc")
-	// counter, _ := meter.Int64Counter("grpc request")
 
 	return &feedServiceServer{
 		storage: st,
 		logger:  logger,
 		tracer:  tracer,
-		// counter: counter,
 	}
 }
 
 func (f feedServiceServer) AddSiteFeed(ctx context.Context, pbfeed *pb.Feed) (*empty.Empty, error) {
 	ctx, span := f.tracer.Start(ctx, "FeedService.AddSiteFeed", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
-
-	// attr := attribute.String("op", "FeedService.AddSiteFeed")
-	// f.counter.Add(ctx, 1, metric.WithAttributes(attr))
 
 	site := feed.Site[int64]{
 		Site: pbfeed.Site,
@@ -63,9 +55,6 @@ func (f feedServiceServer) GetSites(ctx context.Context, e *empty.Empty) (*pb.Si
 
 	ctx, span := f.tracer.Start(ctx, "FeedService.GetSites", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
-
-	// attr := attribute.String("op", "FeedService.GetSites")
-	// f.counter.Add(ctx, 1, metric.WithAttributes(attr))
 
 	sites, err := f.storage.GetSites(ctx)
 	if err != nil {
@@ -96,9 +85,6 @@ func (f feedServiceServer) UpdateSite(ctx context.Context, pbsite *pb.Site) (*em
 	ctx, span := f.tracer.Start(ctx, "FeedService.UpdateSite", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
-	// attr := attribute.String("op", "FeedService.UpdateSite")
-	// f.counter.Add(ctx, 1, metric.WithAttributes(attr))
-
 	ts := pbsite.Updated.AsTime()
 	site := feed.Site[int64]{
 		ID:           pbsite.GetId(),
@@ -116,9 +102,6 @@ func (f feedServiceServer) UpdateSite(ctx context.Context, pbsite *pb.Site) (*em
 func (f feedServiceServer) UpsertArticle(ctx context.Context, pbarticle *pb.ArticleSite) (*pb.ArticleIdentifier, error) {
 	ctx, span := f.tracer.Start(ctx, "FeedService.UpsertArticle", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
-
-	// attr := attribute.String("op", "FeedService.UpsertArticle")
-	// f.counter.Add(ctx, 1, metric.WithAttributes(attr))
 
 	var authors []string
 	for _, author := range pbarticle.Article.Authors {
@@ -148,9 +131,6 @@ func (f feedServiceServer) UpsertArticle(ctx context.Context, pbarticle *pb.Arti
 func (f feedServiceServer) GetArticles(ctx context.Context, e *empty.Empty) (*pb.ArticlesSite, error) {
 	ctx, span := f.tracer.Start(ctx, "FeedService.GetArticles", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
-
-	// attr := attribute.String("op", "FeedService.GetArticles")
-	// f.counter.Add(ctx, 1, metric.WithAttributes(attr))
 
 	articles, err := f.storage.GetArticles(ctx)
 	if err != nil {
@@ -185,9 +165,6 @@ func (f feedServiceServer) GetArticles(ctx context.Context, e *empty.Empty) (*pb
 func (f *feedServiceServer) GetArticlesWithSite(ctx context.Context, in *pb.SiteId) (*pb.Articles, error) {
 	ctx, span := f.tracer.Start(ctx, "FeedService.GetArticlesWithSite", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
-
-	// attr := attribute.String("op", "FeedService.GetArticlesWithSite")
-	// f.counter.Add(ctx, 1, metric.WithAttributes(attr))
 
 	articles, err := f.storage.GetArticlesWithSite(ctx, in.Id, in.LimitRecords)
 	if err != nil {

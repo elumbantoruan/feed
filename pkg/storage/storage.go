@@ -122,15 +122,11 @@ func (ms *MySQLStorage) GetSites(ctx context.Context) ([]feed.Site[int64], error
 }
 
 func (ms *MySQLStorage) GetSitesFeed(ctx context.Context) ([]feed.Feed, error) {
-	db, err := otelsql.Open("mysql", ms.conn)
+	db, err := sql.Open("mysql", ms.conn)
 	if err != nil {
 		return nil, err
 	}
 	defer db.Close()
-
-	dbAttr := attribute.KeyValue{Key: attribute.Key("db.name"), Value: attribute.StringValue("mysql")}
-	ctx, span := ms.tracer.Start(ctx, "MySQL.GetSitesFeed", trace.WithSpanKind(trace.SpanKindClient), trace.WithAttributes(dbAttr))
-	defer span.End()
 
 	query := "SELECT id, name, url, type, updated FROM feed_site"
 	selectQ, err := db.Prepare(query)
@@ -161,15 +157,11 @@ func (ms *MySQLStorage) GetSitesFeed(ctx context.Context) ([]feed.Feed, error) {
 func (ms *MySQLStorage) UpdateSite(ctx context.Context, feed feed.Site[int64]) error {
 	query := fmt.Sprintf("UPDATE feed_site SET feed_site.updated = ?, feed_site.articles_hash = ? WHERE feed_site.id = ?")
 
-	db, err := otelsql.Open("mysql", ms.conn)
+	db, err := sql.Open("mysql", ms.conn)
 	if err != nil {
 		return err
 	}
 	defer db.Close()
-
-	dbAttr := attribute.KeyValue{Key: attribute.Key("db.name"), Value: attribute.StringValue("mysql")}
-	ctx, span := ms.tracer.Start(ctx, "MySQL.UpdateSite", trace.WithSpanKind(trace.SpanKindClient), trace.WithAttributes(dbAttr))
-	defer span.End()
 
 	update, err := db.Prepare(query)
 	if err != nil {
@@ -195,15 +187,11 @@ func (ms *MySQLStorage) UpdateSite(ctx context.Context, feed feed.Site[int64]) e
 func (ms *MySQLStorage) UpdateSiteFeed(ctx context.Context, feed feed.Feed) error {
 	query := fmt.Sprintf("UPDATE feed_site SET feed_site.updated = ? WHERE feed_site.id = ?")
 
-	db, err := otelsql.Open("mysql", ms.conn)
+	db, err := sql.Open("mysql", ms.conn)
 	if err != nil {
 		return err
 	}
 	defer db.Close()
-
-	dbAttr := attribute.KeyValue{Key: attribute.Key("db.name"), Value: attribute.StringValue("mysql")}
-	ctx, span := ms.tracer.Start(ctx, "MySQL.UpdateSiteFeed", trace.WithSpanKind(trace.SpanKindClient), trace.WithAttributes(dbAttr))
-	defer span.End()
 
 	update, err := db.Prepare(query)
 	if err != nil {
@@ -269,15 +257,11 @@ func (ms *MySQLStorage) UpsertArticle(ctx context.Context, article feed.Article,
 			hash = ?;
 	`)
 
-	db, err := otelsql.Open("mysql", ms.conn)
+	db, err := sql.Open("mysql", ms.conn)
 	if err != nil {
 		return -1, err
 	}
 	defer db.Close()
-
-	dbAttr := attribute.KeyValue{Key: attribute.Key("db.name"), Value: attribute.StringValue("mysql")}
-	ctx, span := ms.tracer.Start(ctx, "MySQL.UpsertArticle", trace.WithSpanKind(trace.SpanKindClient), trace.WithAttributes(dbAttr))
-	defer span.End()
 
 	insert, err := db.Prepare(query)
 	if err != nil {
@@ -311,15 +295,11 @@ func (ms *MySQLStorage) GetArticle(ctx context.Context, id int64) (*feed.Article
 
 func (ms *MySQLStorage) GetArticleHash(ctx context.Context, hash string) (*feed.Article, error) {
 	query := "SELECT id, title FROM feed_content WHERE hash = ?"
-	db, err := otelsql.Open("mysql", ms.conn)
+	db, err := sql.Open("mysql", ms.conn)
 	if err != nil {
 		return nil, err
 	}
 	defer db.Close()
-
-	dbAttr := attribute.KeyValue{Key: attribute.Key("db.name"), Value: attribute.StringValue("mysql")}
-	ctx, span := ms.tracer.Start(ctx, "MySQL.GetArticleHash", trace.WithSpanKind(trace.SpanKindClient), trace.WithAttributes(dbAttr))
-	defer span.End()
 
 	selectQ, err := db.Prepare(query)
 	if err != nil {
@@ -344,15 +324,11 @@ func (ms *MySQLStorage) GetArticleHash(ctx context.Context, hash string) (*feed.
 
 func (ms *MySQLStorage) GetArticles(ctx context.Context) ([]feed.ArticleSite[int64], error) {
 	query := "SELECT feed_site_id, content_id, title, link, pub_date, description, content, authors FROM feed_content ORDER BY id desc LIMIT 100"
-	db, err := otelsql.Open("mysql", ms.conn)
+	db, err := sql.Open("mysql", ms.conn)
 	if err != nil {
 		return nil, err
 	}
 	defer db.Close()
-
-	dbAttr := attribute.KeyValue{Key: attribute.Key("db.name"), Value: attribute.StringValue("mysql")}
-	ctx, span := ms.tracer.Start(ctx, "MySQL.GetArticles", trace.WithSpanKind(trace.SpanKindClient), trace.WithAttributes(dbAttr))
-	defer span.End()
 
 	selectQ, err := db.Prepare(query)
 	if err != nil {
@@ -388,15 +364,11 @@ func (ms *MySQLStorage) GetArticles(ctx context.Context) ([]feed.ArticleSite[int
 
 func (ms *MySQLStorage) GetArticlesWithSite(ctx context.Context, siteID int64, limit int32) ([]feed.Article, error) {
 	query := "SELECT content_id, title, link, pub_date, description, content, authors FROM feed_content WHERE feed_site_id = ? ORDER BY id desc LIMIT ?"
-	db, err := otelsql.Open("mysql", ms.conn)
+	db, err := sql.Open("mysql", ms.conn)
 	if err != nil {
 		return nil, err
 	}
 	defer db.Close()
-
-	dbAttr := attribute.KeyValue{Key: attribute.Key("db.name"), Value: attribute.StringValue("mysql")}
-	ctx, span := ms.tracer.Start(ctx, "MySQL.GetArticlesWithSite", trace.WithSpanKind(trace.SpanKindClient), trace.WithAttributes(dbAttr))
-	defer span.End()
 
 	selectQ, err := db.Prepare(query)
 	if err != nil {

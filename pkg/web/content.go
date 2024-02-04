@@ -9,6 +9,7 @@ import (
 
 	"github.com/elumbantoruan/feed/pkg/feed"
 	"github.com/elumbantoruan/feed/pkg/web/storage"
+	"github.com/prometheus/client_golang/prometheus"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
@@ -37,13 +38,23 @@ func NewContent(webStorage *storage.WebStorage, logger *slog.Logger) *Handler {
 	}
 }
 
+var RenderCounter = prometheus.NewCounter(
+	prometheus.CounterOpts{
+		Name: "render_request_count",
+		Help: "Number of request handled by RenderContent handler",
+	},
+)
+
 func (h *Handler) RenderContent(w http.ResponseWriter, r *http.Request) {
+
+	RenderCounter.Inc()
+
 	ctx := r.Context()
 
 	ctx, span := h.tracer.Start(ctx, "Web.RenderContent", trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 
-	h.logger.Info("RenderContent", slog.String("traceId", span.SpanContext().TraceID().String()))
+	h.logger.Info("RenderContent", slog.String("traceID", span.SpanContext().TraceID().String()))
 
 	feeds, err := h.webStorage.GetArticles(ctx)
 	if err != nil {

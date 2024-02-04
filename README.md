@@ -113,11 +113,12 @@ The span started from WebUI (newsfeed-web) traversed to gRPC (newsfeed-grpc) to 
 
 ![Cronjob-gRPC](artifact/images/trace-web-tempo.png)
 
-#### Service Map
+#### Service Graph
 
-Below is the service map that represent the relational and dependency of the entire systems including Cronjob, Web UI, gRPC, and MySQL
+Below is the service map that represent the relational and dependency of the entire systems including Cronjob, Web UI, gRPC, and MySQL.  
+Moreover, Grafana Tempo also generate metrics from ingested traces using [metrics-generator](https://grafana.com/docs/tempo/latest/getting-started/metrics-from-traces/#:~:text=Tempo%20can%20generate%20metrics%20from,service%20graphs%20and%20span%20metrics).
 
-![ServiceMap](artifact/images/service-map.png)
+![ServiceGraph](artifact/images/traces-metrics.png)
 
 ### Logs
 
