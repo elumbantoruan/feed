@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS feed_content (
     link		    VARCHAR(512),
     pub_date	    DATETIME,
     description		TEXT,
-    content		    TEXT,
+    content		    MEDIUMTEXT,
     authors		    VARCHAR(256),
     hash            VARCHAR(512),
     PRIMARY KEY     (id),
