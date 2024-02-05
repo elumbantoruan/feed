@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"sync"
+	"time"
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc"
@@ -40,6 +41,12 @@ func NewTraceProviderGrpc(ctx context.Context, endpoint string) *sdktrace.Tracer
 		ctx,
 		otlptracegrpc.WithEndpoint(endpoint),
 		otlptracegrpc.WithInsecure(),
+		otlptracegrpc.WithRetry(otlptracegrpc.RetryConfig{
+			Enabled:         true,
+			InitialInterval: 1 * time.Second,
+			MaxInterval:     3 * time.Second,
+			MaxElapsedTime:  4 * time.Second,
+		}),
 	)
 	if err != nil {
 		log.Fatalf("failed creating OTLP Trace gRPC exporter: %v", err)
