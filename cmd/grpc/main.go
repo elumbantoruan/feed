@@ -35,6 +35,7 @@ const (
 func main() {
 
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	logger.With(slog.String("service-name", "newsfeed-grpc"))
 	logger.Info("main", slog.Time("start", time.Now()), slog.Int("cpu count", runtime.NumCPU()))
 
 	config, err := config.NewConfig()

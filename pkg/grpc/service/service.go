@@ -56,6 +56,8 @@ func (f feedServiceServer) GetSites(ctx context.Context, e *empty.Empty) (*pb.Si
 	ctx, span := f.tracer.Start(ctx, "FeedService.GetSites", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
+	f.logger.Info("GetSites", slog.String("traceID", span.SpanContext().TraceID().String()))
+
 	sites, err := f.storage.GetSites(ctx)
 	if err != nil {
 		f.logger.Error("GetSites", slog.Any("error", err))
@@ -85,6 +87,8 @@ func (f feedServiceServer) UpdateSite(ctx context.Context, pbsite *pb.Site) (*em
 	ctx, span := f.tracer.Start(ctx, "FeedService.UpdateSite", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
+	f.logger.Info("UpdateSite", slog.String("traceID", span.SpanContext().TraceID().String()))
+
 	ts := pbsite.Updated.AsTime()
 	site := feed.Site[int64]{
 		ID:           pbsite.GetId(),
@@ -102,6 +106,8 @@ func (f feedServiceServer) UpdateSite(ctx context.Context, pbsite *pb.Site) (*em
 func (f feedServiceServer) UpsertArticle(ctx context.Context, pbarticle *pb.ArticleSite) (*pb.ArticleIdentifier, error) {
 	ctx, span := f.tracer.Start(ctx, "FeedService.UpsertArticle", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
+
+	f.logger.Info("UpsertArticle", slog.String("traceID", span.SpanContext().TraceID().String()))
 
 	var authors []string
 	for _, author := range pbarticle.Article.Authors {
@@ -131,6 +137,8 @@ func (f feedServiceServer) UpsertArticle(ctx context.Context, pbarticle *pb.Arti
 func (f feedServiceServer) GetArticles(ctx context.Context, e *empty.Empty) (*pb.ArticlesSite, error) {
 	ctx, span := f.tracer.Start(ctx, "FeedService.GetArticles", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
+
+	f.logger.Info("GetArticles", slog.String("traceID", span.SpanContext().TraceID().String()))
 
 	articles, err := f.storage.GetArticles(ctx)
 	if err != nil {
@@ -165,6 +173,8 @@ func (f feedServiceServer) GetArticles(ctx context.Context, e *empty.Empty) (*pb
 func (f *feedServiceServer) GetArticlesWithSite(ctx context.Context, in *pb.SiteId) (*pb.Articles, error) {
 	ctx, span := f.tracer.Start(ctx, "FeedService.GetArticlesWithSite", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
+
+	f.logger.Info("GetArticlesWithSite", slog.String("traceID", span.SpanContext().TraceID().String()))
 
 	articles, err := f.storage.GetArticlesWithSite(ctx, in.Id, in.LimitRecords)
 	if err != nil {
