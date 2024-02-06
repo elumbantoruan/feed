@@ -69,6 +69,11 @@ func (w Workflow) Run(ctx context.Context) (Results, error) {
 	siteC := make(chan feed.Site[int64], jobs)
 	resultC := make(chan Result, jobs)
 
+	defer func() {
+		close(siteC)
+		close(resultC)
+	}()
+
 	for i := 1; i <= workerPools; i++ {
 		go func(i int) {
 			w.worker(ctx, i, siteC, resultC)
@@ -78,8 +83,6 @@ func (w Workflow) Run(ctx context.Context) (Results, error) {
 	for i := 0; i < jobs; i++ {
 		siteC <- sites[i]
 	}
-
-	close(siteC)
 
 	var anyError bool
 
@@ -92,8 +95,6 @@ func (w Workflow) Run(ctx context.Context) (Results, error) {
 		}
 		results = append(results, result)
 	}
-
-	close(resultC)
 
 	if anyError {
 		rootSpan.SetStatus(codes.Error, "Workflow-Run completed with error. Check the log")

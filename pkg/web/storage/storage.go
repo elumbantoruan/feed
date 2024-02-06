@@ -36,6 +36,11 @@ func (w *WebStorage) GetArticles(ctx context.Context) (feed.FeedSites[int64], er
 		feedSitesStream = make(chan FeedSitesResult[int64], len(sites))
 	)
 
+	defer func() {
+		close(sitesStream)
+		close(feedSitesStream)
+	}()
+
 	for i := 1; i <= workers; i++ {
 		go func(wid int) {
 			w.workerGetArticles(ctx, wid, sitesStream, feedSitesStream)
