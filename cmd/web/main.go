@@ -32,7 +32,7 @@ func main() {
 		log.Fatal(err)
 	}
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
-	webstorage := storage.NewWebStorage(grpcClient)
+	webstorage := storage.NewWebStorage(grpcClient, logger)
 
 	ctx := context.Background()
 	tp := otelsetup.NewTraceProviderGrpc(ctx, cfg.OtelGRPCEndpoint)

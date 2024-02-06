@@ -3,8 +3,10 @@ package storage
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"runtime"
 	"sort"
+	"time"
 
 	"github.com/elumbantoruan/feed/pkg/feed"
 	"github.com/elumbantoruan/feed/pkg/grpc/client"
@@ -12,11 +14,13 @@ import (
 
 type WebStorage struct {
 	GRCPClient client.GRPCFeedClient
+	Logger     *slog.Logger
 }
 
-func NewWebStorage(grpcClient client.GRPCFeedClient) *WebStorage {
+func NewWebStorage(grpcClient client.GRPCFeedClient, logger *slog.Logger) *WebStorage {
 	return &WebStorage{
 		GRCPClient: grpcClient,
+		Logger:     logger,
 	}
 }
 
@@ -43,6 +47,8 @@ func (w *WebStorage) GetArticles(ctx context.Context) (feed.FeedSites[int64], er
 
 	for i := 1; i <= workers; i++ {
 		go func(wid int) {
+			ctx, cancel := context.WithTimeout(ctx, 500*time.Millisecond)
+			defer cancel()
 			w.workerGetArticles(ctx, wid, sitesStream, feedSitesStream)
 		}(i)
 	}
@@ -52,7 +58,7 @@ func (w *WebStorage) GetArticles(ctx context.Context) (feed.FeedSites[int64], er
 	for i := 0; i < len(sites); i++ {
 		result := <-feedSitesStream
 		if result.Error != nil {
-			return nil, fmt.Errorf("GetArticles.GetArticlesWithSite error: %w", err)
+			return nil, fmt.Errorf("GetArticles.GetArticlesWithSite: %d, error: %w", sites[i].ID, err)
 		}
 		feedSite := result.FeedSite
 		feeds = append(feeds, feedSite)
@@ -66,15 +72,27 @@ func (w *WebStorage) GetArticles(ctx context.Context) (feed.FeedSites[int64], er
 }
 
 func (w *WebStorage) workerGetArticles(ctx context.Context, wID int, siteStream <-chan feed.Site[int64], feedSiteResult chan<- FeedSitesResult[int64]) {
-	site := <-siteStream
-	articles, err := w.GRCPClient.GetArticlesWithSite(ctx, site.ID, 10)
-	feedSiteResult <- FeedSitesResult[int64]{
-		FeedSite: feed.FeedSite[int64]{
-			Site:     site,
-			Articles: articles,
-		},
-		Error: err,
+	for site := range siteStream {
+
+		w.Logger.Info("workerGetArticles", slog.Int("worker-id", wID))
+
+		articles, err := w.GRCPClient.GetArticlesWithSite(ctx, site.ID, 10)
+
+		select {
+		case <-ctx.Done():
+			feedSiteResult <- FeedSitesResult[int64]{
+				Error: ctx.Err(),
+			}
+		case feedSiteResult <- FeedSitesResult[int64]{
+			FeedSite: feed.FeedSite[int64]{
+				Site:     site,
+				Articles: articles,
+			},
+			Error: err,
+		}:
+		}
 	}
+
 }
 
 type FeedSitesResult[T any] struct {

@@ -5,6 +5,7 @@ import (
 	"html"
 	"log/slog"
 	"net/http"
+	"runtime"
 	"strings"
 
 	"github.com/elumbantoruan/feed/pkg/feed"
@@ -54,13 +55,14 @@ func (h *Handler) RenderContent(w http.ResponseWriter, r *http.Request) {
 	ctx, span := h.tracer.Start(ctx, "Web.RenderContent", trace.WithSpanKind(trace.SpanKindClient))
 	defer span.End()
 
-	h.logger.Info("RenderContent", slog.String("traceID", span.SpanContext().TraceID().String()))
+	h.logger.Info("RenderContent", slog.String("traceID", span.SpanContext().TraceID().String()), slog.Int("cpu-count", runtime.NumCPU()))
 
 	feeds, err := h.webStorage.GetArticles(ctx)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
+		h.logger.Error("RenderContent", slog.Any("error", err))
 		return
 	}
 	w.WriteHeader(http.StatusOK)

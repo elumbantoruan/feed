@@ -174,11 +174,9 @@ func (f *feedServiceServer) GetArticlesWithSite(ctx context.Context, in *pb.Site
 	ctx, span := f.tracer.Start(ctx, "FeedService.GetArticlesWithSite", trace.WithSpanKind(trace.SpanKindServer))
 	defer span.End()
 
-	f.logger.Info("GetArticlesWithSite", slog.String("traceID", span.SpanContext().TraceID().String()))
-
 	articles, err := f.storage.GetArticlesWithSite(ctx, in.Id, in.LimitRecords)
 	if err != nil {
-		f.logger.Error("GetArticlesWithSite", slog.Any("error", err))
+		f.logger.Error("GetArticlesWithSite", slog.String("traceID", span.SpanContext().TraceID().String()), slog.Any("error", err))
 		return nil, err
 	}
 	var articlespb []*pb.Article
@@ -198,6 +196,8 @@ func (f *feedServiceServer) GetArticlesWithSite(ctx context.Context, in *pb.Site
 		}
 		articlespb = append(articlespb, &articlepb)
 	}
+	f.logger.Info("GetArticlesWithSite", slog.String("traceID", span.SpanContext().TraceID().String()), slog.Int64("site", in.Id))
+
 	return &pb.Articles{
 		Articles: articlespb,
 	}, nil
