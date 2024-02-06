@@ -56,15 +56,17 @@ newsfeed-web   NodePort   10.101.3.164   <none>        5000:30010/TCP   35h
 #### pods
 
 ``` text
-kubectl get pods
-NAME                              READY   STATUS      RESTARTS   AGE
-newsfeed-cronjob-28421320-7jkvk   0/1     Completed   0          11m
-newsfeed-cronjob-28421325-n6r2r   0/1     Completed   0          6m25s
-newsfeed-cronjob-28421330-89zjh   0/1     Completed   0          85s
-newsfeed-grpc-5fd97bfb69-ns7ln    1/1     Running     0          18h
-newsfeed-grpc-5fd97bfb69-qsn5r    1/1     Running     0          18h
-newsfeed-web-6b665875cc-4mwhk     1/1     Running     0          41h
-newsfeed-web-6b665875cc-lxl4m     1/1     Running     0          41h
+kubectl get pods -o wide
+NAME                              READY   STATUS      RESTARTS   AGE     IP               NODE                    NOMINATED NODE   READINESS GATES
+newsfeed-cronjob-28454355-whzgm   0/1     Completed   0          33m     172.16.234.30    k8sworker2.edison.net   <none>           <none>
+newsfeed-cronjob-28454370-ktfjs   0/1     Completed   0          18m     172.16.234.41    k8sworker2.edison.net   <none>           <none>
+newsfeed-cronjob-28454385-h2nsm   0/1     Completed   0          3m16s   172.16.234.42    k8sworker2.edison.net   <none>           <none>
+newsfeed-grpc-7484d4ffcb-djfrc    1/1     Running     0          35m     172.16.234.38    k8sworker2.edison.net   <none>           <none>
+newsfeed-grpc-7484d4ffcb-hvpc4    1/1     Running     0          35m     172.16.103.233   k8sworker1.edison.net   <none>           <none>
+newsfeed-web-789dbf4679-qw4xn     1/1     Running     0          44m     172.16.234.32    k8sworker2.edison.net   <none>           <none>
+newsfeed-web-789dbf4679-xz7ht     1/1     Running     0          44m     172.16.103.232   k8sworker1.edison.net   <none>           <none>
+promtail-daemonset-jszbn          1/1     Running     0          3d22h   172.16.103.200   k8sworker1.edison.net   <none>           <none>
+promtail-daemonset-rcq2d          1/1     Running     0          3d22h   172.16.234.14    k8sworker2.edison.net   <none>           <none>
 ```
 
 ### MySQL
@@ -91,7 +93,7 @@ Link to [source code](https://github.com/elumbantoruan/feed/tree/main/cmd/grpc/s
 
 ### Web UI service  
 
-The web UI displays the most recent news feed. It invokes gRPC to get data.  It is containerized and managed in Kubernetes.  
+The web UI displays the most recent news feed for all sites. It invokes gRPC to get data concurrently.  It is containerized and managed in Kubernetes.  
 Link to [source code](https://github.com/elumbantoruan/feed/tree/main/cmd/web).
 
 ![WebUI](artifact/images/webui.png)
