@@ -5,9 +5,7 @@ metadata:
   namespace: newsfeed
 type: Opaque
 data:
-  DB_CONN: ${DB_CONN}
   DISCORD_WEBHOOK: ${DISCORD_WEBHOOK}
-  HONEYCOMB_API_KEY: ${HONEYCOMB_API_KEY}
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -42,21 +40,11 @@ spec:
               requests:
                 memory: "100Mi"
             env:
-            - name: DB_CONN
-              valueFrom:
-                secretKeyRef:
-                  name: cronsecret
-                  key: DB_CONN
             - name: DISCORD_WEBHOOK
               valueFrom:
                 secretKeyRef:
                   name: cronsecret
                   key: DISCORD_WEBHOOK
-            - name: HONEYCOMB_API_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: cronsecret
-                  key: HONEYCOMB_API_KEY
             - name: GRPC_SERVER_ADDRESS
               valueFrom:
                 configMapKeyRef:
