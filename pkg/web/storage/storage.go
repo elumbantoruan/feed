@@ -47,7 +47,7 @@ func (w *WebStorage) GetArticles(ctx context.Context) (feed.FeedSites[int64], er
 
 	for i := 1; i <= workers; i++ {
 		go func(wid int) {
-			ctx, cancel := context.WithTimeout(ctx, 500*time.Millisecond)
+			ctx, cancel := context.WithTimeout(ctx, 200*time.Millisecond)
 			defer cancel()
 			w.workerGetArticles(ctx, wid, sitesStream, feedSitesStream)
 		}(i)
@@ -58,7 +58,7 @@ func (w *WebStorage) GetArticles(ctx context.Context) (feed.FeedSites[int64], er
 	for i := 0; i < len(sites); i++ {
 		result := <-feedSitesStream
 		if result.Error != nil {
-			return nil, fmt.Errorf("GetArticles.GetArticlesWithSite: %d, error: %w", sites[i].ID, err)
+			return nil, fmt.Errorf("GetArticles.GetArticlesWithSite: %d, error: %w", sites[i].ID, result.Error)
 		}
 		feedSite := result.FeedSite
 		feeds = append(feeds, feedSite)
