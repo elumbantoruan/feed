@@ -53,7 +53,7 @@ type Metric struct {
 
 func (w Workflow) Run(ctx context.Context) (Results, error) {
 
-	ctx, rootSpan := w.Tracer.Start(ctx, "Workflow.Run", trace.WithSpanKind(trace.SpanKindClient))
+	ctx, rootSpan := w.Tracer.Start(ctx, "Cronjob-Workflow-Run", trace.WithSpanKind(trace.SpanKindClient))
 	defer rootSpan.End()
 
 	sites, err := w.GRPCClient.GetSites(ctx)
@@ -62,8 +62,11 @@ func (w Workflow) Run(ctx context.Context) (Results, error) {
 		return nil, err
 	}
 
+	traceID := rootSpan.SpanContext().TraceID().String()
+	w.Logger = w.Logger.With(slog.String("traceID", traceID))
+
 	workerPools := runtime.NumCPU()
-	w.Logger.Info("Run", slog.Int("Number of worker pools", workerPools))
+	w.Logger.Info("Cronjob-Workflow-Run", slog.Int("Number of worker pools", workerPools))
 
 	jobs := len(sites)
 	siteC := make(chan feed.Site[int64], jobs)
@@ -97,9 +100,9 @@ func (w Workflow) Run(ctx context.Context) (Results, error) {
 	}
 
 	if anyError {
-		rootSpan.SetStatus(codes.Error, "Workflow-Run completed with error. Check the log")
+		rootSpan.SetStatus(codes.Error, "Cronjob-Workflow-Run completed with error. Check the log")
 	} else {
-		rootSpan.SetStatus(codes.Ok, "Workflow-Run completed successfully")
+		rootSpan.SetStatus(codes.Ok, "Cronjob-Workflow-Run completed successfully")
 	}
 
 	return results, nil
@@ -110,16 +113,16 @@ func (w Workflow) worker(ctx context.Context, wID int, siteC <-chan feed.Site[in
 
 		cr := crawler.Factory(site)
 
-		w.Logger.Info("Attempt to download", slog.String("url", site.RSS), slog.Int("worker", wID))
-
-		ctx, span := w.Tracer.Start(ctx, "Workflow-worker",
+		ctx, span := w.Tracer.Start(ctx, "Cronjob-Workflow-Worker",
 			trace.WithAttributes(attribute.Int("workerID", wID)),
 		)
 		defer span.End()
 
+		w.Logger.Info("Cronjob-Workflow-Worker download content", slog.String("url", site.RSS), slog.Int("worker", wID))
+
 		f, err := cr.Download(ctx, site.RSS)
 		if err != nil {
-			w.Logger.Error("Run - Download", slog.Any("error", err))
+			w.Logger.Error("Cronjob-Workflow-Worker", slog.Any("error", err))
 			resultC <- Result{WorkerID: wID, Metric: Metric{Site: site.Site}, Error: err}
 			return
 		}
@@ -132,12 +135,12 @@ func (w Workflow) worker(ctx context.Context, wID int, siteC <-chan feed.Site[in
 			resultC <- Result{WorkerID: wID, Metric: Metric{Site: site.Site}, Error: nil}
 			return
 		} else {
-			w.Logger.Info("Update", slog.String("site", site.Site), slog.Time("current ts", *f.Site.Updated), slog.Time("last ts", *site.Updated))
+			w.Logger.Info("Cronjob-Workflow-Worker Update", slog.String("site", site.Site), slog.Time("current ts", *f.Site.Updated), slog.Time("last ts", *site.Updated))
 
 			f.Site.ArticlesHash = articlesHash
 			err = w.GRPCClient.UpdateSite(ctx, f.Site)
 			if err != nil {
-				w.Logger.Error("Run - UpdateFeed", slog.Any("error", err))
+				w.Logger.Error("Cronjob-Workflow-Worker - UpdateFeed", slog.Any("error", err))
 				resultC <- Result{WorkerID: wID, Metric: Metric{Site: site.Site}, Error: err}
 				return
 			}
@@ -152,7 +155,7 @@ func (w Workflow) worker(ctx context.Context, wID int, siteC <-chan feed.Site[in
 		for _, article := range f.Articles {
 			newID, err := w.GRPCClient.UpsertArticle(ctx, article, site.ID)
 			if err != nil {
-				w.Logger.Error("Run - UpsertArticle", slog.Any("error", err))
+				w.Logger.Error("Cronjob-Workflow-Worker - UpsertArticle", slog.Any("error", err))
 				resultC <- Result{WorkerID: wID, Metric: Metric{Site: site.Site}, Error: err}
 				return
 			}
