@@ -10,6 +10,7 @@ type Config struct {
 	DiscordWebhook    string
 	GRPCServerAddress string
 	OtelGRPCEndpoint  string
+	LokiGRPCAddress   string
 }
 
 func NewConfig() (*Config, error) {
@@ -23,11 +24,16 @@ func NewConfig() (*Config, error) {
 	if otelGRPCEndpoint == "" {
 		return nil, errors.New("empty otel grpc endpoint in config")
 	}
+	lokiGRPCAddress := os.Getenv("LOKI_GRPC_ADDRESS")
+	if lokiGRPCAddress == "" {
+		return nil, errors.New("empty loki grpc address in config")
+	}
 
 	return &Config{
 		DBConn:            conn,
 		DiscordWebhook:    discord,
 		GRPCServerAddress: grpcServerAddress,
 		OtelGRPCEndpoint:  otelGRPCEndpoint,
+		LokiGRPCAddress:   lokiGRPCAddress,
 	}, nil
 }

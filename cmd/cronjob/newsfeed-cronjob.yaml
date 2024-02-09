@@ -16,6 +16,7 @@ data:
   GRPC_SERVER_ADDRESS: 192.168.1.7:30008
   OTEL_SERVICE_NAME: "newsfeed-cronjob"
   OTEL_EXPORTER_OTLP_GRPC_ENDPOINT: "192.168.1.6:4317"
+  LOKI_GRPC_ADDRESS: "192.168.1.6:9096"
 ---
 apiVersion: batch/v1
 kind: CronJob
@@ -60,4 +61,9 @@ spec:
                 configMapKeyRef:
                   name: cronconfigmap
                   key: OTEL_EXPORTER_OTLP_GRPC_ENDPOINT
+            - name: LOKI_GRPC_ADDRESS
+              valueFrom:
+                configMapKeyRef:
+                  name: cronconfigmap
+                  key: LOKI_GRPC_ADDRESS
           restartPolicy: OnFailure
