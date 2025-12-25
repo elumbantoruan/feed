@@ -323,7 +323,7 @@ func (ms *MySQLStorage) GetArticleHash(ctx context.Context, hash string) (*feed.
 }
 
 func (ms *MySQLStorage) GetArticles(ctx context.Context) ([]feed.ArticleSite[int64], error) {
-	query := "SELECT feed_site_id, content_id, title, link, pub_date, description, content, authors FROM feed_content ORDER BY id desc LIMIT 100"
+	query := "SELECT feed_site_id, content_id, title, link, pub_date, description, content, authors FROM feed_content ORDER BY pub_date desc LIMIT 100"
 	db, err := sql.Open("mysql", ms.conn)
 	if err != nil {
 		return nil, err
@@ -363,7 +363,7 @@ func (ms *MySQLStorage) GetArticles(ctx context.Context) ([]feed.ArticleSite[int
 }
 
 func (ms *MySQLStorage) GetArticlesWithSite(ctx context.Context, siteID int64, limit int32) ([]feed.Article, error) {
-	query := "SELECT content_id, title, link, pub_date, description, content, authors FROM feed_content WHERE feed_site_id = ? ORDER BY id desc LIMIT ?"
+	query := "SELECT content_id, title, link, pub_date, description, content, authors FROM feed_content WHERE feed_site_id = ? ORDER BY pub_date desc LIMIT ?"
 	db, err := sql.Open("mysql", ms.conn)
 	if err != nil {
 		return nil, err
